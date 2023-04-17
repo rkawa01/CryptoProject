@@ -5,33 +5,40 @@ class JsonInfo():
     def __init__(self,username,password):
         self.username = username
         self.password = password
-        self.url = 'http://127.0.0.1:8000/crypto/'
-        self.userAgent = b'Application admin'
+
         self.manager = QtNetwork.QNetworkAccessManager()
         self.info = ''
-        self.getresponse()
-        
-    def getresponse(self):
         self.loop = QtCore.QEventLoop()
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(self.url))
-
+        self.manager.finished.connect(self.handleDone)
+    def postresponse(self):
+        self.url = QtCore.QUrl('http://127.0.0.1:8000/crypto/login/')
+        request = QtNetwork.QNetworkRequest(self.url)
         params = {"name": self.username, "pass": self.password}
         multi_part =self.construct_multipart(params)
         self.reply = self.manager.post(request,multi_part)
         multi_part.setParent(self.reply)
-        self.manager.finished.connect(self.handleDone)
-        self.loop.exec_()
 
+        self.loop.exec_()
+    def getresponse(self):
+        self.url = QtCore.QUrl('http://127.0.0.1:8000/crypto/index/')
+        request = QtNetwork.QNetworkRequest(self.url)
+        self.reply = self.manager.get(request)
+        self.loop.exec_()
 
     def handleDone(self):
         self.loop.quit()
-        responseData = json.loads(self.reply.readAll().data())
+        # print(self.reply.readAll().data())
+        data_get = self.reply.readAll().data()
+        print(data_get)
+        # print(data_get)
+        # responseData = {'message':None}
+        print("load")
+        responseData = json.loads(data_get)
 
         if self.reply.error() == QtNetwork.QNetworkReply.NoError:
             print('Success')
         else:
             print('Error')
-
         self.info = responseData['message']
 
     def construct_multipart(self, data):
