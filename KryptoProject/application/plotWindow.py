@@ -2,8 +2,6 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QBrush, QColor, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel
-import yfinance as yf
-import requests
 import cryptocompare
 import pandas as pd
 from datetime import datetime,date,timedelta
@@ -112,6 +110,40 @@ class PlotWindow(QMainWindow):
         price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
         price_data = price_data[price_data['datetimes'] >= days_before]
         return price_data
+    def get_this_year(self):
+        raw_price_data = \
+            cryptocompare.get_historical_price_day(
+                self.ticker_symbol,
+                self.currency,
+                limit=self.limit_value,
+                exchange=self.exchange_name
+
+            )
+        price_data = pd.DataFrame.from_dict(raw_price_data)
+        price_data.set_index("time", inplace=True)
+        price_data.index = pd.to_datetime(price_data.index, unit='s')
+        price_data['datetimes'] = price_data.index
+        year = date.today().strftime('%Y')
+        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y')
+        price_data = price_data[price_data['datetimes'] >= year]
+        return price_data
+    def get_weekly(self):
+        raw_price_data = \
+            cryptocompare.get_historical_price_hour(
+                self.ticker_symbol,
+                self.currency,
+                limit=self.limit_value,
+                exchange=self.exchange_name
+
+            )
+        price_data = pd.DataFrame.from_dict(raw_price_data)
+        price_data.set_index("time", inplace=True)
+        price_data.index = pd.to_datetime(price_data.index, unit='s')
+        price_data['datetimes'] = price_data.index
+        days_before = (date.today() - timedelta(days=7)).isoformat()
+        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
+        price_data = price_data[price_data['datetimes'] >= days_before]
+        return price_data
     def get_plot(self):
         # if(self.request):
             #if you want to retrieve some data from the request
@@ -123,8 +155,9 @@ class PlotWindow(QMainWindow):
         self.exchange_name = 'CCCAGG'
 
 
-        print(self.get_yearly())
-        # print(self.get_today())
+        print(self.get_weekly())
+        # print(self.get_this_year())
+        # print(self.get_daily())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
