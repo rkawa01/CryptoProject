@@ -4,7 +4,9 @@ from PyQt5.QtGui import QPainter, QBrush, QColor, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel
 import yfinance as yf
 import requests
-import datetime as dt
+import cryptocompare
+import pandas as pd
+from datetime import datetime,date,timedelta
 
 class PlotWindow(QMainWindow):
     def __init__(self,request = None ,parent=None):
@@ -60,25 +62,79 @@ class PlotWindow(QMainWindow):
 
         # Call the base class resizeEvent to handle any other resizing needed
         super(PlotWindow, self).resizeEvent(event)
+    def get_daily(self):
+        raw_price_data = \
+            cryptocompare.get_historical_price_minute(
+                self.ticker_symbol,
+                self.currency,
+                limit=self.limit_value,
+                exchange=self.exchange_name
+
+            )
+        price_data = pd.DataFrame.from_dict(raw_price_data)
+        price_data.set_index("time", inplace=True)
+        price_data.index = pd.to_datetime(price_data.index, unit='s')
+        price_data['datetimes'] = price_data.index
+        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
+        price_data = price_data[price_data['datetimes'] == str(date.today())]
+        return price_data
+    def get_monthly(self):
+        raw_price_data = \
+            cryptocompare.get_historical_price_hour(
+                self.ticker_symbol,
+                self.currency,
+                limit=self.limit_value,
+                exchange=self.exchange_name
+
+            )
+        price_data = pd.DataFrame.from_dict(raw_price_data)
+        price_data.set_index("time", inplace=True)
+        price_data.index = pd.to_datetime(price_data.index, unit='s')
+        price_data['datetimes'] = price_data.index
+        days_before = (date.today() - timedelta(days=31)).isoformat()
+        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
+        price_data = price_data[price_data['datetimes'] >= days_before]
+        return price_data
+    def get_yearly(self):
+        raw_price_data = \
+            cryptocompare.get_historical_price_day(
+                self.ticker_symbol,
+                self.currency,
+                limit=self.limit_value,
+                exchange=self.exchange_name
+
+            )
+        price_data = pd.DataFrame.from_dict(raw_price_data)
+        price_data.set_index("time", inplace=True)
+        price_data.index = pd.to_datetime(price_data.index, unit='s')
+        price_data['datetimes'] = price_data.index
+        days_before = (date.today() - timedelta(days=365)).isoformat()
+        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
+        price_data = price_data[price_data['datetimes'] >= days_before]
+        return price_data
     def get_plot(self):
         # if(self.request):
-            #if you want to get some data from the request
+            #if you want to retrieve some data from the request
             # self.request.getresponse()
             # print(self.request.info)
+        self.ticker_symbol = 'BTC'
+        self.currency = 'USD'
+        self.limit_value = 2000
+        self.exchange_name = 'CCCAGG'
 
-        ticker = 'TSLA'
-        base_url = 'https://query1.finance.yahoo.com'
-        url = "{}/v8/finance/chart/{}".format(base_url, ticker)
-        params = {'interval': '1h', 'range': '7d', 'includePrePost': True}
-        response = requests.get(url=url, params=params)
-        data = response.json()
-        print(data)
-        # BTC_Ticker = yf.Ticker("BTC-USD")
-        # BTC_Data = BTC_Ticker.history(period="max")
-        # print(BTC_Data)
+
+        print(self.get_yearly())
+        # print(self.get_today())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = PlotWindow()
     window.show()
     sys.exit(app.exec_())
+
+# To execute get_plot or something every 5 minutes
+# import time
+#
+# while (True):
+#     print('hello geek!')
+#     time.sleep(300)
