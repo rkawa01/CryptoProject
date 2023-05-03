@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QHB
 import cryptocompare
 import pandas as pd
 from datetime import datetime,date,timedelta
+import cplot
+import pyqtgraph as pg
 
 class PlotWindow(QMainWindow):
     def __init__(self,request = None ,parent=None):
@@ -13,6 +15,9 @@ class PlotWindow(QMainWindow):
         # Create a central widget to hold the layout
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
+
+        self.graphWidget = pg.PlotWidget()
+        # self.setCentralWidget(self.graphWidget)
 
         # Create a vertical layout to hold the plot placeholder and other widgets
         self.layout = QVBoxLayout(self.central_widget)
@@ -46,7 +51,8 @@ class PlotWindow(QMainWindow):
         self.plot_layout.addStretch()
 
         # Add the plot layout to the main layout
-        self.layout.addLayout(self.plot_layout)
+        # self.layout.addLayout(self.plot_layout)
+        self.layout.addWidget(self.graphWidget)
         self.layout.addStretch()
         self.get_plot()
 
@@ -155,9 +161,36 @@ class PlotWindow(QMainWindow):
         self.exchange_name = 'CCCAGG'
 
 
-        print(self.get_weekly())
         # print(self.get_this_year())
         # print(self.get_daily())
+        records = self.get_weekly()
+        # records.plot()
+        # print(records)
+        # print(records.index.values)
+        keySet = records.keys()
+
+        print(keySet)
+
+        highPrices = []
+        lowPrices = []
+        openDate = []
+
+
+        for key in keySet:
+            print(key)
+        lowPrices = records.get(keySet[1])
+        times = records.get(keySet[2])
+
+        print(lowPrices.index)
+        # print(times)
+        # for lowPrice in records.get(keySet[1]):
+        #     print(lowPrice)
+        #
+        self.graphWidget.plot(lowPrices.index, lowPrices, pen = None, symbol = 'o')
+        # lowPrices.plot()
+
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -1,5 +1,6 @@
 # This is a sample Python script.
 import sys
+import PyQt5
 
 from PyQt5.QtWidgets import QApplication
 
