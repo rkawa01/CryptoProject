@@ -1,68 +1,71 @@
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QBrush, QColor, QFont
-from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
+    QPushButton
 import cryptocompare
 import pandas as pd
 from datetime import datetime,date,timedelta
-import cplot
 import pyqtgraph as pg
+
+
+class DateTimeAxis(pg.AxisItem):
+    def tickStrings(self, values, scale, spacing):
+        # Convert the tick values to datetime format
+        return [pd.to_datetime(value, unit='s').strftime('%Y-%m-%d %H:%M:%S') for value in values]
 
 class PlotWindow(QMainWindow):
     def __init__(self,request = None ,parent=None):
         super(PlotWindow, self).__init__(parent)
         self.request = request
+
         # Create a central widget to hold the layout
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
 
-        self.graphWidget = pg.PlotWidget()
-        # self.setCentralWidget(self.graphWidget)
-
         # Create a vertical layout to hold the plot placeholder and other widgets
         self.layout = QVBoxLayout(self.central_widget)
 
-        # Create a layout for the plot placeholder
-        self.plot_layout = QHBoxLayout()
+        self.plot_widget = pg.PlotWidget(axisItems={'bottom': DateTimeAxis(orientation='bottom')})
+        # self.graphWidget = pg.PlotWidget()
 
-        # Create a label for the placeholder
-        self.plot_label = QLabel(self.central_widget)
-        self.plot_label.setText("Plot Placeholder")
-        self.plot_label.setAlignment(Qt.AlignCenter)
+        self.buttonLayout = QHBoxLayout()
 
-        # Set the font for the label
-        font = QFont()
-        font.setPointSize(20)
-        font.setBold(True)
-        self.plot_label.setFont(font)
+        # Create the buttons and connect them to functions
+        button1 = QPushButton("Today")
+        button1.clicked.connect(lambda: self.update_request("Daily"))
+        self.buttonLayout.addWidget(button1)
 
-        # Set the background color for the label
-        self.plot_label.setAutoFillBackground(True)
-        palette = self.plot_label.palette()
-        palette.setColor(self.plot_label.backgroundRole(), QColor(0, 0, 255))
-        self.plot_label.setPalette(palette)
+        button2 = QPushButton("Last Week")
+        button2.clicked.connect(lambda: self.update_request("Weekly"))
+        self.buttonLayout.addWidget(button2)
 
-        # Set the size policy for the label so it fills the available space
-        self.plot_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        button3 = QPushButton("Last Month")
+        button3.clicked.connect(lambda: self.update_request("Monthly"))
+        self.buttonLayout.addWidget(button3)
 
-        # Add the label to the plot layout
-        self.plot_layout.addStretch()
-        self.plot_layout.addWidget(self.plot_label)
-        self.plot_layout.addStretch()
+        button4 = QPushButton("This Year")
+        button4.clicked.connect(lambda: self.update_request("this Year"))
+        self.buttonLayout.addWidget(button4)
+
+        button5 = QPushButton("One year")
+        button5.clicked.connect(lambda: self.update_request("Yearly"))
+        self.buttonLayout.addWidget(button5)
 
         # Add the plot layout to the main layout
         # self.layout.addLayout(self.plot_layout)
-        self.layout.addWidget(self.graphWidget)
+        self.layout.addWidget(self.plot_widget)
+        self.layout.addLayout(self.buttonLayout)
         self.layout.addStretch()
+
+
         self.get_plot()
 
     def resizeEvent(self, event):
         # Resize the plot placeholder label to be centered in the upper half of the window
         rect = self.geometry()
         plot_height = rect.height() // 2
-        plot_width = self.plot_layout.geometry().width()
-        self.plot_label.setFixedHeight(plot_height)
-        self.plot_layout.setContentsMargins((rect.width() - plot_width) // 2, plot_height // 2, 0, 0)
+        plot_width = self.layout.geometry().width()
 
         # Call the base class resizeEvent to handle any other resizing needed
         super(PlotWindow, self).resizeEvent(event)
@@ -151,46 +154,45 @@ class PlotWindow(QMainWindow):
         price_data = price_data[price_data['datetimes'] >= days_before]
         return price_data
     def get_plot(self):
-        # if(self.request):
-            #if you want to retrieve some data from the request
-            # self.request.getresponse()
-            # print(self.request.info)
+        self.plot_widget.clear()
+
         self.ticker_symbol = 'BTC'
         self.currency = 'USD'
         self.limit_value = 2000
         self.exchange_name = 'CCCAGG'
 
-
-        # print(self.get_this_year())
-        # print(self.get_daily())
-        records = self.get_weekly()
-        # records.plot()
-        # print(records)
-        # print(records.index.values)
-        keySet = records.keys()
-
-        print(keySet)
-
-        highPrices = []
-        lowPrices = []
-        openDate = []
-
-
-        for key in keySet:
-            print(key)
-        lowPrices = records.get(keySet[1])
-        times = records.get(keySet[2])
-
-        print(lowPrices.index)
-        # print(times)
-        # for lowPrice in records.get(keySet[1]):
-        #     print(lowPrice)
-        #
-        self.graphWidget.plot(lowPrices.index, lowPrices, pen = None, symbol = 'o')
-        # lowPrices.plot()
+        exchange_rates = self.get_weekly()
+        if (self.request):
+            # if you want to retrieve some data from the request
+            # self.request.getresponse()
+            # print(self.request.info)
+            if self.request == "Daily":
+                exchange_rates = self.get_daily()
+            elif self.request == "Weekly":
+                exchange_rates = self.get_weekly()
+            elif self.request == "Monthly":
+                exchange_rates = self.get_monthly()
+            elif self.request == "this Year":
+                exchange_rates = self.get_this_year()
+            elif self.request == "Yearly":
+                exchange_rates = self.get_yearly()
 
 
+        keySet = exchange_rates.keys()
+        highPrices = exchange_rates.get(keySet[0])
+        lowPrices = exchange_rates.get(keySet[1])
 
+        x = lowPrices.index.astype('int64')//10**9
+        y = lowPrices.values
+        self.plot_widget.plot(x, y, pen='b')
+
+        # Refresh the plot widget
+        self.plot_widget.update()
+
+    def update_request(self, message):
+
+        self.request = message
+        self.get_plot()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -198,9 +200,3 @@ if __name__ == '__main__':
     window.show()
     sys.exit(app.exec_())
 
-# To execute get_plot or something every 5 minutes
-# import time
-#
-# while (True):
-#     print('hello geek!')
-#     time.sleep(300)
