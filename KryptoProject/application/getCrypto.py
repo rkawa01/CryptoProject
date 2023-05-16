@@ -10,6 +10,10 @@ class Crypto:
         self.limit_value = limit_value
         self.exchange_name = exchange_name
 
+    def get_price_now(self):
+        raw_price = cryptocompare.get_price(self.ticker_symbol, self.currency, full=True)
+        return raw_price['RAW'][self.ticker_symbol][self.currency]['PRICE']
+
     def get_daily(self):
         raw_price_data = \
             cryptocompare.get_historical_price_minute(
@@ -98,3 +102,8 @@ class Crypto:
         price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
         price_data = price_data[price_data['datetimes'] >= days_before]
         return price_data
+
+if __name__ == '__main__':
+    crypto = Crypto('BTC', 'USD', 2000, 'CCCAGG')
+    print(crypto.get_price_now())
+    # crypto.get_daily()

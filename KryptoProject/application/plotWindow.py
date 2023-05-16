@@ -89,7 +89,7 @@ class PlotWindow(QMainWindow):
         # self.limit_value = 2000
         # self.exchange_name = 'CCCAGG'
 
-
+        # print(self.cryptoInfo.get_price_now())
         exchange_rates = self.cryptoInfo.get_weekly()
         if (self.timeStampType):
             # if you want to retrieve some data from the request
