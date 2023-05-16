@@ -3,12 +3,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QBrush, QColor, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
     QPushButton
-import cryptocompare
 import pandas as pd
-from datetime import datetime,date,timedelta
 import pyqtgraph as pg
 from getCrypto import Crypto
-from getInfo import JsonInfo
 
 
 class DateTimeAxis(pg.AxisItem):
