@@ -7,6 +7,7 @@ import cryptocompare
 import pandas as pd
 from datetime import datetime,date,timedelta
 import pyqtgraph as pg
+from getCrypto import Crypto
 from getInfo import JsonInfo
 
 
@@ -21,6 +22,7 @@ class PlotWindow(QMainWindow):
         self.username = username
         self.request = request
         self.timeStampType = None
+        self.cryptoInfo = Crypto("BTC", "USD", 2000, "CCCAGG")
         # Get user data
         self.wallet = 0
         self.bit = 0
@@ -82,115 +84,29 @@ class PlotWindow(QMainWindow):
 
         # Call the base class resizeEvent to handle any other resizing needed
         super(PlotWindow, self).resizeEvent(event)
-    def get_daily(self):
-        raw_price_data = \
-            cryptocompare.get_historical_price_minute(
-                self.ticker_symbol,
-                self.currency,
-                limit=self.limit_value,
-                exchange=self.exchange_name
-
-            )
-        price_data = pd.DataFrame.from_dict(raw_price_data)
-        price_data.set_index("time", inplace=True)
-        price_data.index = pd.to_datetime(price_data.index, unit='s')
-        price_data['datetimes'] = price_data.index
-        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
-        price_data = price_data[price_data['datetimes'] == str(date.today())]
-        return price_data
-    def get_monthly(self):
-        raw_price_data = \
-            cryptocompare.get_historical_price_hour(
-                self.ticker_symbol,
-                self.currency,
-                limit=self.limit_value,
-                exchange=self.exchange_name
-
-            )
-        price_data = pd.DataFrame.from_dict(raw_price_data)
-        price_data.set_index("time", inplace=True)
-        price_data.index = pd.to_datetime(price_data.index, unit='s')
-        price_data['datetimes'] = price_data.index
-        days_before = (date.today() - timedelta(days=31)).isoformat()
-        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
-        price_data = price_data[price_data['datetimes'] >= days_before]
-        return price_data
-    def get_yearly(self):
-        raw_price_data = \
-            cryptocompare.get_historical_price_day(
-                self.ticker_symbol,
-                self.currency,
-                limit=self.limit_value,
-                exchange=self.exchange_name
-
-            )
-        price_data = pd.DataFrame.from_dict(raw_price_data)
-        price_data.set_index("time", inplace=True)
-        price_data.index = pd.to_datetime(price_data.index, unit='s')
-        price_data['datetimes'] = price_data.index
-        days_before = (date.today() - timedelta(days=365)).isoformat()
-        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
-        price_data = price_data[price_data['datetimes'] >= days_before]
-        return price_data
-    def get_this_year(self):
-        raw_price_data = \
-            cryptocompare.get_historical_price_day(
-                self.ticker_symbol,
-                self.currency,
-                limit=self.limit_value,
-                exchange=self.exchange_name
-
-            )
-        price_data = pd.DataFrame.from_dict(raw_price_data)
-        price_data.set_index("time", inplace=True)
-        price_data.index = pd.to_datetime(price_data.index, unit='s')
-        price_data['datetimes'] = price_data.index
-        year = date.today().strftime('%Y')
-        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y')
-        price_data = price_data[price_data['datetimes'] >= year]
-        return price_data
-    def get_weekly(self):
-        raw_price_data = \
-            cryptocompare.get_historical_price_hour(
-                self.ticker_symbol,
-                self.currency,
-                limit=self.limit_value,
-                exchange=self.exchange_name
-
-            )
-        price_data = pd.DataFrame.from_dict(raw_price_data)
-        price_data.set_index("time", inplace=True)
-        price_data.index = pd.to_datetime(price_data.index, unit='s')
-        price_data['datetimes'] = price_data.index
-        days_before = (date.today() - timedelta(days=7)).isoformat()
-        price_data['datetimes'] = price_data['datetimes'].dt.strftime('%Y-%m-%d')
-        price_data = price_data[price_data['datetimes'] >= days_before]
-        return price_data
     def get_plot(self):
         self.plot_widget.clear()
 
-        self.ticker_symbol = 'BTC'
-        self.currency = 'USD'
-        self.limit_value = 2000
-        self.exchange_name = 'CCCAGG'
-        # self.request.getresponse()
-        # print(self.request.info)
-        print(self.wallet)
-        print(self.bit)
-        exchange_rates = self.get_weekly()
+        # self.ticker_symbol = 'BTC'
+        # self.currency = 'USD'
+        # self.limit_value = 2000
+        # self.exchange_name = 'CCCAGG'
+
+
+        exchange_rates = self.cryptoInfo.get_weekly()
         if (self.timeStampType):
             # if you want to retrieve some data from the request
 
             if self.timeStampType == "Daily":
-                exchange_rates = self.get_daily()
+                exchange_rates = self.cryptoInfo.get_daily()
             elif self.timeStampType == "Weekly":
-                exchange_rates = self.get_weekly()
+                exchange_rates = self.cryptoInfo.get_weekly()
             elif self.timeStampType == "Monthly":
-                exchange_rates = self.get_monthly()
+                exchange_rates = self.cryptoInfo.get_monthly()
             elif self.timeStampType == "this Year":
-                exchange_rates = self.get_this_year()
+                exchange_rates = self.cryptoInfo.get_this_year()
             elif self.timeStampType == "Yearly":
-                exchange_rates = self.get_yearly()
+                exchange_rates = self.cryptoInfo.get_yearly()
 
 
         keySet = exchange_rates.keys()
