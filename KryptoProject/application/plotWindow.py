@@ -18,7 +18,7 @@ class PlotWindow(QMainWindow):
     def __init__(self,request = None ,parent=None):
         super(PlotWindow, self).__init__(parent)
         self.request = request
-
+        self.timeStampType = None
         # Create a central widget to hold the layout
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -57,7 +57,6 @@ class PlotWindow(QMainWindow):
         self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(self.buttonLayout)
         self.layout.addStretch()
-
 
         self.get_plot()
 
@@ -160,29 +159,30 @@ class PlotWindow(QMainWindow):
         self.currency = 'USD'
         self.limit_value = 2000
         self.exchange_name = 'CCCAGG'
-
+        self.request.getresponse()
+        print(self.request.info)
         exchange_rates = self.get_weekly()
-        if (self.request):
+        if (self.timeStampType):
             # if you want to retrieve some data from the request
-            # self.request.getresponse()
-            # print(self.request.info)
-            if self.request == "Daily":
+
+            if self.timeStampType == "Daily":
                 exchange_rates = self.get_daily()
-            elif self.request == "Weekly":
+            elif self.timeStampType == "Weekly":
                 exchange_rates = self.get_weekly()
-            elif self.request == "Monthly":
+            elif self.timeStampType == "Monthly":
                 exchange_rates = self.get_monthly()
-            elif self.request == "this Year":
+            elif self.timeStampType == "this Year":
                 exchange_rates = self.get_this_year()
-            elif self.request == "Yearly":
+            elif self.timeStampType == "Yearly":
                 exchange_rates = self.get_yearly()
 
 
         keySet = exchange_rates.keys()
         highPrices = exchange_rates.get(keySet[0])
         lowPrices = exchange_rates.get(keySet[1])
-
-        x = lowPrices.index.astype('int64')//10**9
+        # time_labels =
+        x = [time.timestamp() for time in exchange_rates.index]
+        # x = lowPrices.index.astype('int64')//10**9
         y = lowPrices.values
         self.plot_widget.plot(x, y, pen='b')
 
@@ -191,7 +191,7 @@ class PlotWindow(QMainWindow):
 
     def update_request(self, message):
 
-        self.request = message
+        self.timeStampType = message
         self.get_plot()
 
 if __name__ == '__main__':

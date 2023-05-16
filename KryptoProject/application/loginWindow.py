@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox)
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from GetInfo import JsonInfo
+from getInfo import JsonInfo
 import plotWindow
 
 
@@ -50,7 +50,7 @@ class LoginForm(QWidget):
         # print(object_json.info)
         if object_json.info is not None:
             self.hide()
-            self.next_window = plotWindow.PlotWindow(object_json)
+            self.next_window = plotWindow.PlotWindow(request = object_json)
             self.next_window.show()
             msg.setText('Success')
             msg.exec_()

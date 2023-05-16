@@ -30,9 +30,15 @@ def login(request):
 
 @login_required
 def crypto(request):
-    response_data = {}
-    response_data['message'] = None
-    print(request.method)
-    print(request.user)
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    if request.method == "GET":
+        # print(request.user._meta.fields)
+        cryptoUser = CryptoUser.objects.get(user=request.user)
+        response_data = {}
+        response_data['message'] = "info"
+        response_data['wallet'] = cryptoUser.user_data.wallet_dollars
+        response_data['bit'] = cryptoUser.user_data.wallet_bit
+        print(request.method)
+        print(request.user)
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse("{Don't know what to send}")
     # Create your views here.
