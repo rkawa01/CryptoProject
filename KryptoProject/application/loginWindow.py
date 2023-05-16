@@ -50,7 +50,7 @@ class LoginForm(QWidget):
         # print(object_json.info)
         if object_json.info["message"] is not None:
             self.hide()
-            self.next_window = plotWindow.PlotWindow(request = object_json)
+            self.next_window = plotWindow.PlotWindow(request = object_json, username = self.lineEdit_username.text())
             self.next_window.show()
             msg.setText('Success')
             msg.exec_()

@@ -38,6 +38,7 @@ class PlotWindow(QMainWindow):
         self.plot_widget = pg.PlotWidget(axisItems={'bottom': DateTimeAxis(orientation='bottom')})
         # self.graphWidget = pg.PlotWidget()
 
+        self.userLayout = QHBoxLayout()
 
         self.textLayout = QVBoxLayout()
         self.label1 = QLabel("UserName:   " + self.username)
@@ -73,13 +74,16 @@ class PlotWindow(QMainWindow):
 
         # Add the plot layout to the main layout
         # self.layout.addLayout(self.plot_layout)
-        self.layout.addLayout(self.textLayout)
+        self.userLayout.addLayout(self.textLayout)
+        self.layout.addLayout(self.userLayout)
         self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(self.buttonLayout)
         self.layout.addStretch()
 
         self.get_plot()
+    def check_textbox(self):
 
+        return True
     def resizeEvent(self, event):
         # Resize the plot placeholder label to be centered in the upper half of the window
         rect = self.geometry()
