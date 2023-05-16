@@ -16,8 +16,9 @@ class DateTimeAxis(pg.AxisItem):
         return [pd.to_datetime(value, unit='s').strftime('%Y-%m-%d %H:%M:%S') for value in values]
 
 class PlotWindow(QMainWindow):
-    def __init__(self,request = None ,parent=None):
+    def __init__(self,request = None ,parent=None,username=""):
         super(PlotWindow, self).__init__(parent)
+        self.username = username
         self.request = request
         self.timeStampType = None
         # Get user data
@@ -39,6 +40,9 @@ class PlotWindow(QMainWindow):
         # self.graphWidget = pg.PlotWidget()
 
         self.buttonLayout = QHBoxLayout()
+        self.textLayout = QHBoxLayout()
+        self.label1 = QLabel("UserName: " + self.username)
+        self.textLayout.addWidget(self.label1)
 
         # Create the buttons and connect them to functions
         button1 = QPushButton("Today")
@@ -63,6 +67,7 @@ class PlotWindow(QMainWindow):
 
         # Add the plot layout to the main layout
         # self.layout.addLayout(self.plot_layout)
+        self.layout.addLayout(self.textLayout)
         self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(self.buttonLayout)
         self.layout.addStretch()
