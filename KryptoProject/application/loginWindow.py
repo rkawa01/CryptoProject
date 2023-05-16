@@ -48,7 +48,7 @@ class LoginForm(QWidget):
         object_json = JsonInfo(self.lineEdit_username.text(),self.lineEdit_password.text())
         object_json.postresponse()
         # print(object_json.info)
-        if object_json.info is not None:
+        if object_json.info["message"] is not None:
             self.hide()
             self.next_window = plotWindow.PlotWindow(request = object_json)
             self.next_window.show()

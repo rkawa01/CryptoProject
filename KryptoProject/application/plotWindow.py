@@ -7,6 +7,7 @@ import cryptocompare
 import pandas as pd
 from datetime import datetime,date,timedelta
 import pyqtgraph as pg
+from getInfo import JsonInfo
 
 
 class DateTimeAxis(pg.AxisItem):
@@ -19,6 +20,14 @@ class PlotWindow(QMainWindow):
         super(PlotWindow, self).__init__(parent)
         self.request = request
         self.timeStampType = None
+        # Get user data
+        self.wallet = 0
+        self.bit = 0
+        if self.request and self.request.info:
+            self.request.getresponse()
+            self.wallet = self.request.info['wallet']
+            self.bit = self.request.info['bit']
+
         # Create a central widget to hold the layout
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -159,8 +168,10 @@ class PlotWindow(QMainWindow):
         self.currency = 'USD'
         self.limit_value = 2000
         self.exchange_name = 'CCCAGG'
-        self.request.getresponse()
-        print(self.request.info)
+        # self.request.getresponse()
+        # print(self.request.info)
+        print(self.wallet)
+        print(self.bit)
         exchange_rates = self.get_weekly()
         if (self.timeStampType):
             # if you want to retrieve some data from the request

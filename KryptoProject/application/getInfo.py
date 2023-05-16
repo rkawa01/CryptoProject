@@ -33,13 +33,21 @@ class JsonInfo():
         # print(data_get)
         # responseData = {'message':None}
         print("load")
-        responseData = json.loads(data_get)
+        print(data_get)
+        if(data_get != b''):
+            responseData = json.loads(data_get)
+            self.info = responseData
+            # print(self.info)
+        else:
+            self.info = None
 
         if self.reply.error() == QtNetwork.QNetworkReply.NoError:
+
             print('Success')
+
         else:
             print('Error')
-        self.info = responseData['message']
+
 
     def construct_multipart(self, data):
         multi_part = QtNetwork.QHttpMultiPart(QtNetwork.QHttpMultiPart.FormDataType)
