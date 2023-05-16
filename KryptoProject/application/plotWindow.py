@@ -14,7 +14,7 @@ class DateTimeAxis(pg.AxisItem):
         return [pd.to_datetime(value, unit='s').strftime('%Y-%m-%d %H:%M:%S') for value in values]
 
 class PlotWindow(QMainWindow):
-    def __init__(self,request = None ,parent=None,username=""):
+    def __init__(self,request = None ,parent=None, username=""):
         super(PlotWindow, self).__init__(parent)
         self.username = username
         self.request = request
@@ -38,11 +38,18 @@ class PlotWindow(QMainWindow):
         self.plot_widget = pg.PlotWidget(axisItems={'bottom': DateTimeAxis(orientation='bottom')})
         # self.graphWidget = pg.PlotWidget()
 
-        self.buttonLayout = QHBoxLayout()
-        self.textLayout = QHBoxLayout()
-        self.label1 = QLabel("UserName: " + self.username)
-        self.textLayout.addWidget(self.label1)
 
+        self.textLayout = QVBoxLayout()
+        self.label1 = QLabel("UserName:   " + self.username)
+        self.bitcoinsOwned = QLabel("My bitcoins:   " + str(self.bit) + " BTC")
+        self.walletState = QLabel("My wallet state:   " + str(self.wallet) + " USD")
+        self.currentValue = QLabel("Bitcoin buy price:   " + str())
+
+        self.textLayout.addWidget(self.label1)
+        self.textLayout.addWidget(self.bitcoinsOwned)
+        self.textLayout.addWidget(self.walletState)
+
+        self.buttonLayout = QHBoxLayout()
         # Create the buttons and connect them to functions
         button1 = QPushButton("Today")
         button1.clicked.connect(lambda: self.update_request("Daily"))
@@ -81,6 +88,7 @@ class PlotWindow(QMainWindow):
 
         # Call the base class resizeEvent to handle any other resizing needed
         super(PlotWindow, self).resizeEvent(event)
+
     def get_plot(self):
         self.plot_widget.clear()
 
