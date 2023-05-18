@@ -1,10 +1,13 @@
 import sys
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QBrush, QColor, QFont
-from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
+
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
     QPushButton
 import pandas as pd
 import pyqtgraph as pg
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 from getCrypto import Crypto
 
 
@@ -12,6 +15,15 @@ class DateTimeAxis(pg.AxisItem):
     def tickStrings(self, values, scale, spacing):
         # Convert the tick values to datetime format
         return [pd.to_datetime(value, unit='s').strftime('%Y-%m-%d %H:%M:%S') for value in values]
+
+
+class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
+
 
 class PlotWindow(QMainWindow):
     def __init__(self,request = None ,parent=None, username=""):
@@ -22,7 +34,7 @@ class PlotWindow(QMainWindow):
         self.cryptoInfo = Crypto("BTC", "USD", 2000, "CCCAGG")
         # Get user data
         self.wallet = 0
-        self.bit = 0
+        self.bit = 0.5
         if self.request and self.request.info:
             self.request.getresponse()
             self.wallet = self.request.info['wallet']
@@ -35,20 +47,28 @@ class PlotWindow(QMainWindow):
         # Create a vertical layout to hold the plot placeholder and other widgets
         self.layout = QVBoxLayout(self.central_widget)
 
-        self.plot_widget = pg.PlotWidget(axisItems={'bottom': DateTimeAxis(orientation='bottom')})
-        # self.graphWidget = pg.PlotWidget()
-
         self.userLayout = QHBoxLayout()
-
+        current_price = self.cryptoInfo.get_price_now()
         self.textLayout = QVBoxLayout()
         self.label1 = QLabel("UserName:   " + self.username)
         self.bitcoinsOwned = QLabel("My bitcoins:   " + str(self.bit) + " BTC")
         self.walletState = QLabel("My wallet state:   " + str(self.wallet) + " USD")
-        self.currentValue = QLabel("Bitcoin buy price:   " + str())
+        self.currentValue = QLabel("Bitcoin buy price:   " + str(current_price) + " USD")
+        self.bitcoinsValue = QLabel("My Bitcoins value as of now:   " + str(current_price*self.bit) + " USD")
 
         self.textLayout.addWidget(self.label1)
         self.textLayout.addWidget(self.bitcoinsOwned)
         self.textLayout.addWidget(self.walletState)
+        self.textLayout.addWidget(self.currentValue)
+        self.textLayout.addWidget(self.bitcoinsValue)
+
+
+        # Create the maptlotlib FigureCanvas object, which defines a single set of axes as self.axes.
+        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
+        toolbar = NavigationToolbar(self.sc, self)
+        self.plot_layout = QVBoxLayout()
+        self.plot_layout.addWidget(toolbar)
+        self.plot_layout.addWidget(self.sc)
 
         self.buttonLayout = QHBoxLayout()
         # Create the buttons and connect them to functions
@@ -76,7 +96,8 @@ class PlotWindow(QMainWindow):
         # self.layout.addLayout(self.plot_layout)
         self.userLayout.addLayout(self.textLayout)
         self.layout.addLayout(self.userLayout)
-        self.layout.addWidget(self.plot_widget)
+        self.layout.addLayout(self.plot_layout)
+        # self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(self.buttonLayout)
         self.layout.addStretch()
 
@@ -94,12 +115,7 @@ class PlotWindow(QMainWindow):
         super(PlotWindow, self).resizeEvent(event)
 
     def get_plot(self):
-        self.plot_widget.clear()
-
-        # self.ticker_symbol = 'BTC'
-        # self.currency = 'USD'
-        # self.limit_value = 2000
-        # self.exchange_name = 'CCCAGG'
+        self.sc.axes.clear()
 
         # print(self.cryptoInfo.get_price_now())
         exchange_rates = self.cryptoInfo.get_weekly()
@@ -117,23 +133,26 @@ class PlotWindow(QMainWindow):
             elif self.timeStampType == "Yearly":
                 exchange_rates = self.cryptoInfo.get_yearly()
 
-
         keySet = exchange_rates.keys()
         highPrices = exchange_rates.get(keySet[0])
         lowPrices = exchange_rates.get(keySet[1])
-        # time_labels =
+
         x = [time.timestamp() for time in exchange_rates.index]
         # x = lowPrices.index.astype('int64')//10**9
         y = lowPrices.values
-        self.plot_widget.plot(x, y, pen='b')
 
-        # Refresh the plot widget
-        self.plot_widget.update()
+        # plot the pandas DataFrame, passing in the matplotlib Canvas axes.
+        exchange_rates.plot(ax=self.sc.axes, y='low')
+
+        # alternatively plot x and y prepared sets of data
+        # self.sc.axes.plot(x, y)
+        self.sc.draw()
 
     def update_request(self, message):
 
         self.timeStampType = message
         self.get_plot()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
