@@ -1,7 +1,8 @@
 import sys
 
+from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
-    QPushButton
+    QPushButton, QLineEdit, QDoubleSpinBox
 import pandas as pd
 import pyqtgraph as pg
 import seaborn as sns
@@ -60,8 +61,8 @@ class PlotWindow(QMainWindow):
     def init(self):
 
         userLayout = QHBoxLayout()
-        current_price = self.cryptoInfo.get_price_now()
         textLayout = QVBoxLayout()
+        current_price = self.cryptoInfo.get_price_now()
         userName = QLabel("UserName:   " + self.username)
         bitcoinsOwned = QLabel("My bitcoins:   " + str(self.bit) + " BTC")
         walletState = QLabel("My wallet state:   " + str(self.wallet) + " USD")
@@ -73,6 +74,31 @@ class PlotWindow(QMainWindow):
         textLayout.addWidget(walletState)
         textLayout.addWidget(currentValue)
         textLayout.addWidget(bitcoinsValue)
+
+        buySellLayout = QVBoxLayout()
+        buyLayout = QHBoxLayout()
+        sellLayout = QHBoxLayout()
+
+        buySpinBox = QDoubleSpinBox()
+        buySpinBox.setMaximum(self.wallet / current_price)
+        sellSpinBox = QDoubleSpinBox()
+        sellSpinBox.setMaximum(self.bit)
+
+        buyButton = QPushButton("Buy")
+        buyButton.clicked.connect(lambda: self.buy(buySpinBox))
+        sellButton = QPushButton("Sell")
+        sellButton.clicked.connect(lambda: self.sell(sellSpinBox))
+
+
+        buyLayout.addWidget(buySpinBox)
+        sellLayout.addWidget(sellSpinBox)
+        buyLayout.addWidget(buyButton)
+        sellLayout.addWidget(sellButton)
+        buySellLayout.addLayout(buyLayout)
+        buySellLayout.addLayout(sellLayout)
+
+
+
 
         # Create the seaborn FigureCanvas object, which defines a single set of axes as self.axes.
         # self.sc = MplCanvas(self, width=5, height=4, dpi=100)
@@ -119,12 +145,24 @@ class PlotWindow(QMainWindow):
         # Add the plot layout to the main layout
         # self.layout.addLayout(self.plot_layout)
         userLayout.addLayout(textLayout)
+        userLayout.addLayout(buySellLayout)
         self.layout.addLayout(userLayout)
         self.layout.addLayout(plot_layout)
         # self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(buttonLayout)
         self.layout.addStretch()
-
+    def buy(self,spinBox):
+        print("buy")
+        print(spinBox.value())
+        # self.bit += 1
+        # self.wallet -= self.cryptoInfo.get_price_now()
+        # self.update_request(self.timeStampType)
+    def sell(self,spinBox):
+        print("sell")
+        print(spinBox.value())
+        # self.bit -= 1
+        # self.wallet += self.cryptoInfo.get_price_now()
+        # self.update_request(self.timeStampType)
     def check_textbox(self):
 
         return True
@@ -193,7 +231,6 @@ class PlotWindow(QMainWindow):
         # self.sc.axes.plot(x, y)
         self.canvas.draw()
         # self.sc.draw()
-        # Update positions after drawing
 
     def hover(self, event):
         self.lnx[0].set_data([event.xdata, event.xdata], [self.min_y, self.max_y])
