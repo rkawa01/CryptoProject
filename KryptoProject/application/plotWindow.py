@@ -63,35 +63,35 @@ class PlotWindow(QMainWindow):
         userLayout = QHBoxLayout()
         textLayout = QVBoxLayout()
         current_price = self.cryptoInfo.get_price_now()
-        userName = QLabel("UserName:   " + self.username)
-        bitcoinsOwned = QLabel("My bitcoins:   " + str(self.bit) + " BTC")
-        walletState = QLabel("My wallet state:   " + str(self.wallet) + " USD")
-        currentValue = QLabel("Bitcoin buy price:   " + str(current_price) + " USD")
-        bitcoinsValue = QLabel("My Bitcoins value as of now:   " + str(current_price * self.bit) + " USD")
+        self.userName = QLabel("UserName:   " + self.username)
+        self.bitcoinsOwned = QLabel("My bitcoins:   " + str(self.bit) + " BTC")
+        self.walletState = QLabel("My wallet state:   " + str(self.wallet) + " USD")
+        self.currentValue = QLabel("Bitcoin buy price:   " + str(current_price) + " USD")
+        self.bitcoinsValue = QLabel("My Bitcoins value as of now:   " + str(current_price * self.bit) + " USD")
 
-        textLayout.addWidget(userName)
-        textLayout.addWidget(bitcoinsOwned)
-        textLayout.addWidget(walletState)
-        textLayout.addWidget(currentValue)
-        textLayout.addWidget(bitcoinsValue)
+        textLayout.addWidget(self.userName)
+        textLayout.addWidget(self.bitcoinsOwned)
+        textLayout.addWidget(self.walletState)
+        textLayout.addWidget(self.currentValue)
+        textLayout.addWidget(self.bitcoinsValue)
 
         buySellLayout = QVBoxLayout()
         buyLayout = QHBoxLayout()
         sellLayout = QHBoxLayout()
 
-        buySpinBox = QDoubleSpinBox()
-        buySpinBox.setMaximum(self.wallet / current_price)
-        sellSpinBox = QDoubleSpinBox()
-        sellSpinBox.setMaximum(self.bit)
+        self.buySpinBox = QDoubleSpinBox()
+        self.buySpinBox.setMaximum(self.wallet / current_price)
+        self.sellSpinBox = QDoubleSpinBox()
+        self.sellSpinBox.setMaximum(self.bit)
 
         buyButton = QPushButton("Buy")
-        buyButton.clicked.connect(lambda: self.buy(buySpinBox))
+        buyButton.clicked.connect(lambda: self.buy(self.buySpinBox))
         sellButton = QPushButton("Sell")
-        sellButton.clicked.connect(lambda: self.sell(sellSpinBox))
+        sellButton.clicked.connect(lambda: self.sell(self.sellSpinBox))
 
 
-        buyLayout.addWidget(buySpinBox)
-        sellLayout.addWidget(sellSpinBox)
+        buyLayout.addWidget(self.buySpinBox)
+        sellLayout.addWidget(self.sellSpinBox)
         buyLayout.addWidget(buyButton)
         sellLayout.addWidget(sellButton)
         buySellLayout.addLayout(buyLayout)
@@ -154,15 +154,21 @@ class PlotWindow(QMainWindow):
     def buy(self,spinBox):
         print("buy")
         print(spinBox.value())
-        # self.bit += 1
-        # self.wallet -= self.cryptoInfo.get_price_now()
-        # self.update_request(self.timeStampType)
+        self.bit += spinBox.value()
+        self.wallet -= self.cryptoInfo.get_price_now() * spinBox.value()
+        self.update_labels()
     def sell(self,spinBox):
         print("sell")
         print(spinBox.value())
-        # self.bit -= 1
-        # self.wallet += self.cryptoInfo.get_price_now()
-        # self.update_request(self.timeStampType)
+        self.bit -= spinBox.value()
+        self.wallet += self.cryptoInfo.get_price_now() * spinBox.value()
+        self.update_labels()
+    def update_labels(self):
+        self.sellSpinBox.setMaximum(self.bit)
+        self.buySpinBox.setMaximum(self.wallet / self.cryptoInfo.get_price_now())
+        self.bitcoinsOwned.setText("My bitcoins:   " + str(self.bit) + " BTC")
+        self.walletState.setText("My wallet state:   " + str(self.wallet) + " USD")
+        self.bitcoinsValue.setText("My Bitcoins value as of now:   " + str(self.cryptoInfo.get_price_now() * self.bit) + " USD")
     def check_textbox(self):
 
         return True
