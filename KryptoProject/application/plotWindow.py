@@ -1,5 +1,6 @@
 import sys
 
+from PyQt5.QtCore import QObject, pyqtSignal, QThread
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
     QPushButton, QLineEdit, QDoubleSpinBox
@@ -13,7 +14,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from getCrypto import Crypto
 import mplcursors
-
+from time import sleep
 
 
 class DateTimeAxis(pg.AxisItem):
@@ -28,6 +29,17 @@ class MplCanvas(FigureCanvas):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         super(MplCanvas, self).__init__(fig)
+
+class Worker(QObject):
+    finished = pyqtSignal()
+    update = pyqtSignal()
+
+    def run(self):
+#         Constant update
+        while True:
+            self.update.emit()
+            sleep(10)
+        self.finished.emit()
 
 
 class PlotWindow(QMainWindow):
@@ -45,6 +57,15 @@ class PlotWindow(QMainWindow):
             self.wallet = self.request.info['wallet']
             self.bit = self.request.info['bit']
 
+        self.thread = QThread()
+        self.worker = Worker()
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.update.connect(self.update_runtime)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
         # Create a central widget to hold the layout
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -56,6 +77,8 @@ class PlotWindow(QMainWindow):
 
         self.get_plot()
 
+        # Comment to eventually not run the thread
+        self.thread.start()
 
 
     def init(self):
@@ -169,6 +192,13 @@ class PlotWindow(QMainWindow):
         self.bitcoinsOwned.setText("My bitcoins:   " + str(self.bit) + " BTC")
         self.walletState.setText("My wallet state:   " + str(self.wallet) + " USD")
         self.bitcoinsValue.setText("My Bitcoins value as of now:   " + str(self.cryptoInfo.get_price_now() * self.bit) + " USD")
+    def update_runtime(self):
+        self.bitcoinsValue.setText("My Bitcoins value as of now:   " + str(self.cryptoInfo.get_price_now() * self.bit) + " USD")
+        self.currentValue.setText("Bitcoin buy price:   " + str(self.cryptoInfo.get_price_now()) + " USD")
+        self.get_plot()
+    def update_request(self, message):
+        self.timeStampType = message
+        self.get_plot()
     def check_textbox(self):
 
         return True
@@ -247,10 +277,7 @@ class PlotWindow(QMainWindow):
         self.canvas.draw()
 
 
-    def update_request(self, message):
 
-        self.timeStampType = message
-        self.get_plot()
 
 
 if __name__ == '__main__':
