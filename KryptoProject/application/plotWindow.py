@@ -63,6 +63,7 @@ class PlotWindow(QMainWindow):
         # Get user data
         self.wallet = 0
         self.bit = 0.5
+        self.balance = 0
         if self.request and self.request.info:
             self.request.getresponse()
             self.wallet = self.request.info['wallet']
@@ -102,7 +103,7 @@ class PlotWindow(QMainWindow):
         self.walletState = CustomLabel("My wallet state:   ", " USD")
         self.currentValue = CustomLabel("Bitcoin buy price:   ", " USD")
         self.bitcoinsValue = CustomLabel("My Bitcoins value as of now:   ", " USD")
-
+        self.accountBalance = CustomLabel("Account balance:   ", " USD")
 
 
         textLayout.addWidget(userName)
@@ -110,6 +111,7 @@ class PlotWindow(QMainWindow):
         textLayout.addWidget(self.walletState)
         textLayout.addWidget(self.currentValue)
         textLayout.addWidget(self.bitcoinsValue)
+        textLayout.addWidget(self.accountBalance)
 
         buySellLayout = QVBoxLayout()
         buyLayout = QHBoxLayout()
@@ -189,13 +191,17 @@ class PlotWindow(QMainWindow):
     def buy(self):
 
         self.bit += self.buySpinBox.value()
-        self.wallet -= self.cryptoInfo.get_price_now() * self.buySpinBox.value()
+        cost = self.cryptoInfo.get_price_now() * self.buySpinBox.value()
+        self.wallet -= cost
+        self.balance -= cost
 
         self.update_labels()
     def sell(self):
 
         self.bit -= self.sellSpinBox.value()
-        self.wallet += self.cryptoInfo.get_price_now() * self.sellSpinBox.value()
+        profit = self.cryptoInfo.get_price_now() * self.sellSpinBox.value()
+        self.wallet += profit
+        self.balance += profit
 
         self.update_labels()
     def check_textbox(self):
@@ -323,6 +329,7 @@ class PlotWindow(QMainWindow):
         self.bitcoinsOwned.update_label(str(self.bit))
         self.currentValue.update_label(str(current_price))
         self.bitcoinsValue.update_label(str(self.bit*current_price))
+        self.accountBalance.update_label(str(self.balance))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
