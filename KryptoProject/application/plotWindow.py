@@ -80,7 +80,7 @@ class PlotWindow(QMainWindow):
         self.currentValue = CustomLabel("Bitcoin buy price:   ", " USD")
         self.bitcoinsValue = CustomLabel("My Bitcoins value as of now:   ", " USD")
 
-        self.update_labels()
+
 
         textLayout.addWidget(userName)
         textLayout.addWidget(self.bitcoinsOwned)
@@ -92,26 +92,25 @@ class PlotWindow(QMainWindow):
         buyLayout = QHBoxLayout()
         sellLayout = QHBoxLayout()
 
-        buySpinBox = QDoubleSpinBox()
-        # buySpinBox.setMaximum(self.wallet /  100)
-        sellSpinBox = QDoubleSpinBox()
-        sellSpinBox.setMaximum(self.bit)
+        self.buySpinBox = QDoubleSpinBox()
+        self.buySpinBox.setMaximum(self.wallet / self.cryptoInfo.get_price_now())
+        self.sellSpinBox = QDoubleSpinBox()
+        self.sellSpinBox.setMaximum(self.bit)
 
         buyButton = QPushButton("Buy")
-        buyButton.clicked.connect(lambda: self.buy(buySpinBox))
+        buyButton.clicked.connect(lambda: self.buy())
         sellButton = QPushButton("Sell")
-        sellButton.clicked.connect(lambda: self.sell(sellSpinBox))
+        sellButton.clicked.connect(lambda: self.sell())
 
 
-        buyLayout.addWidget(buySpinBox)
-        sellLayout.addWidget(sellSpinBox)
+        buyLayout.addWidget(self.buySpinBox)
+        sellLayout.addWidget(self.sellSpinBox)
         buyLayout.addWidget(buyButton)
         sellLayout.addWidget(sellButton)
         buySellLayout.addLayout(buyLayout)
         buySellLayout.addLayout(sellLayout)
 
-
-
+        self.update_labels()
 
         # Create the seaborn FigureCanvas object, which defines a single set of axes as self.axes.
         # self.sc = MplCanvas(self, width=5, height=4, dpi=100)
@@ -164,26 +163,27 @@ class PlotWindow(QMainWindow):
         # self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(buttonLayout)
         self.layout.addStretch()
-    def buy(self,spinBox):
-        # print("buy")
-        # print(spinBox.value())
+    def buy(self):
+        print("buy")
+        print(self.buySpinBox.value())
 
-        cost = self.cryptoInfo.get_price_now() * spinBox.value()
+        cost = self.cryptoInfo.get_price_now() * self.buySpinBox.value()
         if cost > self.wallet:
             print("mot enough money")
         else:
-            self.bit += spinBox.value()
+            self.bit += self.buySpinBox.value()
             self.wallet -= cost
 
             self.update_labels()
-    def sell(self,spinBox):
+    def sell(self):
         print("sell")
-        print(spinBox.value())
-        if spinBox.value() > self.bit:
+        print(self.sellSpinBox.value())
+
+        if self.sellSpinBox.value() > self.bit:
             print("mot enough bitcoin")
         else:
-            self.bit -= spinBox.value()
-            self.wallet += self.cryptoInfo.get_price_now() * spinBox.value()
+            self.bit -= self.sellSpinBox.value()
+            self.wallet += self.cryptoInfo.get_price_now() * self.sellSpinBox.value()
 
             self.update_labels()
     def check_textbox(self):
@@ -271,6 +271,9 @@ class PlotWindow(QMainWindow):
 
     def update_labels(self):
         current_price = self.cryptoInfo.get_price_now()
+
+        self.sellSpinBox.setMaximum(self.bit)
+        self.buySpinBox.setMaximum(self.wallet / self.cryptoInfo.get_price_now())
 
         self.walletState.update_label(str(self.wallet))
         self.bitcoinsOwned.update_label(str(self.bit))
