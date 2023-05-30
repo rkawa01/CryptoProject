@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import pyqtSignal, QObject, QThread
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
-    QPushButton, QLineEdit, QDoubleSpinBox
+    QPushButton, QLineEdit, QDoubleSpinBox, QInputDialog, QMessageBox
 import pandas as pd
 import pyqtgraph as pg
 import seaborn as sns
@@ -56,6 +56,7 @@ class Worker(QObject):
 class PlotWindow(QMainWindow):
     def __init__(self,request = None ,parent=None, username=""):
         super(PlotWindow, self).__init__(parent)
+
         self.username = username
         self.request = request
         self.timeStampType = None
@@ -189,9 +190,16 @@ class PlotWindow(QMainWindow):
         self.layout.addLayout(buttonLayout)
         self.layout.addStretch()
     def buy(self):
-
-        self.bit += self.buySpinBox.value()
         cost = self.cryptoInfo.get_price_now() * self.buySpinBox.value()
+        if self.wallet < cost:
+            msg_box = QMessageBox()
+            msg_box.setText("Not enough money.")
+            msg_box.setWindowTitle("Error buying")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec_()
+            return
+        self.bit += self.buySpinBox.value()
+
         self.wallet -= cost
         self.balance -= cost
 
