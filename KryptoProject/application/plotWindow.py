@@ -38,7 +38,7 @@ class Worker(QObject):
 #         Constant update
         while True:
             self.update.emit()
-            sleep(10)
+            sleep(60)
         self.finished.emit()
 
 
@@ -78,8 +78,7 @@ class PlotWindow(QMainWindow):
         self.get_plot()
 
         # Comment to eventually not run the thread
-        self.thread.start()
-
+        # self.thread.start()
 
     def init(self):
 
@@ -174,15 +173,12 @@ class PlotWindow(QMainWindow):
         # self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(buttonLayout)
         self.layout.addStretch()
+
     def buy(self,spinBox):
-        print("buy")
-        print(spinBox.value())
         self.bit += spinBox.value()
         self.wallet -= self.cryptoInfo.get_price_now() * spinBox.value()
         self.update_labels()
     def sell(self,spinBox):
-        print("sell")
-        print(spinBox.value())
         self.bit -= spinBox.value()
         self.wallet += self.cryptoInfo.get_price_now() * spinBox.value()
         self.update_labels()
@@ -212,37 +208,36 @@ class PlotWindow(QMainWindow):
         super(PlotWindow, self).resizeEvent(event)
 
     def get_plot(self):
-        # self.sc.axes.clear()
+
         self.ax.clear()
-        # print(self.cryptoInfo.get_price_now())
-        exchange_rates = self.cryptoInfo.get_weekly()
+
+        self.exchange_rates = self.cryptoInfo.get_weekly()
         if (self.timeStampType):
             # if you want to retrieve some data from the request
 
             if self.timeStampType == "Daily":
-                exchange_rates = self.cryptoInfo.get_daily()
+                self.exchange_rates = self.cryptoInfo.get_daily()
             elif self.timeStampType == "Weekly":
-                exchange_rates = self.cryptoInfo.get_weekly()
+                self.exchange_rates = self.cryptoInfo.get_weekly()
             elif self.timeStampType == "Monthly":
-                exchange_rates = self.cryptoInfo.get_monthly()
+                self.exchange_rates = self.cryptoInfo.get_monthly()
             elif self.timeStampType == "this Year":
-                exchange_rates = self.cryptoInfo.get_this_year()
+                self.exchange_rates = self.cryptoInfo.get_this_year()
             elif self.timeStampType == "Yearly":
-                exchange_rates = self.cryptoInfo.get_yearly()
+                self.exchange_rates = self.cryptoInfo.get_yearly()
 
-        keySet = exchange_rates.keys()
-        highPrices = exchange_rates.get(keySet[0])
-        lowPrices = exchange_rates.get(keySet[1])
+        keySet = self.exchange_rates.keys()
+        highPrices = self.exchange_rates.get(keySet[0])
+        lowPrices = self.exchange_rates.get(keySet[1])
 
-        # x = [time.timestamp() for time in exchange_rates.index]
+        # x = [time.timestamp() for time in self.exchange_rates.index]
         # x = lowPrices.index.astype('int64')//10**9
-        x = lowPrices.index
-        y = lowPrices.values
+        self.x = lowPrices.index
+        self.y = lowPrices.values
         # plot the pandas DataFrame, passing in the matplotlib Canvas axes.
-        # TODO
-        # sns.set_style("darkgrid")
 
-        self.sc = sns.lineplot(ax=self.ax, x=x, y=y,color = "orange")
+
+        self.sc = sns.lineplot(ax=self.ax, x=self.x, y=self.y,color = "orange",marker="o",markersize=3)
 
         self.ax.tick_params(axis='x', rotation=15)
         # print(x[10])
@@ -250,31 +245,61 @@ class PlotWindow(QMainWindow):
 
         # self.min_x, self.max_x = x.min(), x.max()
         # self.min_y,self.max_y = y.min(), y.max()
-        self.min_x, self.max_x = pd.to_datetime(x.min().timestamp() * 0.95, unit='s'), pd.to_datetime(
-            x.max().timestamp() * 1.05, unit='s')
-        self.min_y, self.max_y = y.min() * 0.95, y.max() * 1.05
-        self.lnx = plt.plot([x.min(),x.min()], [y.min(), y.min()], color='white', linewidth=0.3)
-        self.lny = plt.plot([x.min(),x.max()], [y.min(), y.min()], color='white', linewidth=0.3)
+        self.min_x, self.max_x = pd.to_datetime(self.x.min().timestamp() * 0.95, unit='s'), pd.to_datetime(
+            self.x.max().timestamp() * 1.05, unit='s')
+        self.min_y, self.max_y = self.y.min() * 0.95, self.y.max() * 1.05
+        self.lnx = plt.plot([self.x.min(),self.x.min()], [self.y.min(), self.y.min()], color='white', linewidth=0.3)
+        self.lny = plt.plot([self.x.min(),self.x.max()], [self.y.min(), self.y.min()], color='white', linewidth=0.3)
         self.lnx[0].set_linestyle('None')
         self.lny[0].set_linestyle('None')
+        # get points from plot
+        self.annot = self.ax.annotate("", xy=(0, 0), xytext=(40, 20), textcoords="offset points", ha='center', va='bottom'\
+                                      ,bbox=dict(boxstyle='round,pad=0.2', fc='gray', alpha=0.5), \
+                                      arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=-0.5',
+                                                      color='red')
+                                      )
+        self.annot.set_visible(False)
 
 
 
-        # mplcursors.cursor(self.sc, hover=True)
-        # exchange_rates.plot(ax=self.sc.axes, y='low')
+
+        # self.exchange_rates.plot(ax=self.sc.axes, y='low')
 
         # alternatively plot x and y prepared sets of data
         # self.sc.axes.plot(x, y)
-        self.canvas.draw()
+        self.canvas.draw_idle()
         # self.sc.draw()
 
     def hover(self, event):
-        self.lnx[0].set_data([event.xdata, event.xdata], [self.min_y, self.max_y])
-        # print(self.lnx[0].get_data())
-        self.lnx[0].set_linestyle('--')
-        self.lny[0].set_data([self.min_x,self.max_x], [event.ydata, event.ydata])
-        self.lny[0].set_linestyle('--')
-        self.canvas.draw()
+        if event.inaxes == self.ax:
+            # print(event.xdata, event.ydata)
+            self.lnx[0].set_data([event.xdata, event.xdata], [self.min_y, self.max_y])
+            # print(self.lnx[0].get_data())
+            self.lnx[0].set_linestyle('--')
+            self.lny[0].set_data([self.min_x,self.max_x], [event.ydata, event.ydata])
+            self.lny[0].set_linestyle('--')
+            self.lnx[0].set_visible(True)
+            self.lny[0].set_visible(True)
+
+            # get the points contained in the event
+            lines = self.sc.get_lines()[0]
+            points = lines.contains(event)
+            if points[0]:
+                lines_data = lines.get_data()
+                ind = points[1]["ind"][0]
+                self.annot.xy = (lines_data[0][ind], lines_data[1][ind])
+
+                self.annot.set_text(
+                    "Date: {} \nPrice: {}$".format(self.x[ind], self.y[ind]))
+                self.annot.set_visible(True)
+            else:
+                self.annot.set_visible(False)
+        else:
+            self.lnx[0].set_visible(False)
+            self.lny[0].set_visible(False)
+        self.canvas.draw_idle()
+        self.canvas.flush_events()
+
 
 
 
