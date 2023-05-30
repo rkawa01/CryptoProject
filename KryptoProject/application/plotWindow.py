@@ -78,7 +78,7 @@ class PlotWindow(QMainWindow):
         self.get_plot()
 
         # Comment to eventually not run the thread
-        # self.thread.start()
+        self.thread.start()
 
     def init(self):
 
