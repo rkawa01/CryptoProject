@@ -54,7 +54,7 @@ class Worker(QObject):
         self.finished.emit()
 
 class PlotWindow(QMainWindow):
-    def __init__(self,request = None ,parent=None, username=""):
+    def __init__(self,request = None ,parent=None, username="User"):
         super(PlotWindow, self).__init__(parent)
 
         self.username = username
@@ -202,6 +202,10 @@ class PlotWindow(QMainWindow):
 
         self.wallet -= cost
         self.balance -= cost
+        if self.request and self.request.info:
+            self.request.setter(self.bit,self.wallet)
+            self.request.postresponse(False)
+
 
         self.update_labels()
     def sell(self):
@@ -210,6 +214,10 @@ class PlotWindow(QMainWindow):
         profit = self.cryptoInfo.get_price_now() * self.sellSpinBox.value()
         self.wallet += profit
         self.balance += profit
+        if self.request and self.request.info:
+            print("GO")
+            self.request.setter(self.bit,self.wallet)
+            self.request.postresponse(False)
 
         self.update_labels()
     def check_textbox(self):
