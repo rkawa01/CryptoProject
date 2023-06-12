@@ -1,6 +1,11 @@
 import cryptocompare
 import pandas as pd
 from datetime import datetime, date, timedelta
+from cachetools import TTLCache
+
+cache = TTLCache(maxsize=100, ttl=0)
+cryptocompare._cache = cache
+
 
 
 class Crypto:
@@ -15,6 +20,8 @@ class Crypto:
         return raw_price['RAW'][self.ticker_symbol][self.currency]['PRICE']
 
     def get_daily(self):
+        cache = TTLCache(maxsize=100, ttl=0)
+        cryptocompare._cache = cache
         raw_price_data = \
             cryptocompare.get_historical_price_minute(
                 self.ticker_symbol,

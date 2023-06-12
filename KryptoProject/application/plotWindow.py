@@ -258,14 +258,14 @@ class PlotWindow(QMainWindow):
             elif self.timeStampType == "Yearly":
                 self.exchange_rates = self.cryptoInfo.get_yearly()
 
-        keySet = self.exchange_rates.keys()
-        highPrices = self.exchange_rates.get(keySet[0])
-        lowPrices = self.exchange_rates.get(keySet[1])
+        close_prices = self.exchange_rates.get('close')
+        # print last value of the DataFrame with date as index
 
         # x = [time.timestamp() for time in self.exchange_rates.index]
         # x = lowPrices.index.astype('int64')//10**9
-        self.x = lowPrices.index
-        self.y = lowPrices.values
+        self.x = close_prices.index
+        self.y = close_prices.values
+        # print(self.x[-1], self.y[-1])
         # plot the pandas DataFrame, passing in the matplotlib Canvas axes.
         # sns.set_style("darkgrid")
 
