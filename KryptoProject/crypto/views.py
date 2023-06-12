@@ -40,6 +40,7 @@ def crypto(request):
         response_data['message'] = "info"
         response_data['wallet'] = cryptoUser.user_data.wallet_dollars
         response_data['bit'] = cryptoUser.user_data.wallet_bit
+        response_data['balance'] = cryptoUser.user_data.wallet_balance
         return HttpResponse(json.dumps(response_data), content_type="application/json")
     elif request.method == "POST":
         data = request.POST
@@ -47,6 +48,7 @@ def crypto(request):
         # set with converting to double from string
         cryptoUser.user_data.wallet_dollars = float(data['wallet'])
         cryptoUser.user_data.wallet_bit = float(data['bit'])
+        cryptoUser.user_data.wallet_balance = float(data['balance'])
         cryptoUser.user_data.save()
         response_data = {}
         response_data['message'] = "info"

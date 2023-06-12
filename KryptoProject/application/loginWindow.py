@@ -46,9 +46,11 @@ class LoginForm(QWidget):
     def check_password(self):
 
         msg = QMessageBox()
-        object_json = JsonInfo(self.lineEdit_username.text(),self.lineEdit_password.text())
-        object_json.postresponse()
-        object_json.settoken(object_json.info["message"])
+        object_json = JsonInfo()
+        url = 'http://127.0.0.1:8000/crypto/login/'
+        params = {"name": self.lineEdit_username.text(), "pass": self.lineEdit_password.text()}
+        object_json.postResponse(url,params)
+        object_json.setToken(object_json.info["message"])
         if object_json.info["message"] is not None:
             self.hide()
             self.next_window = plotWindow.PlotWindow(request = object_json, username = self.lineEdit_username.text())

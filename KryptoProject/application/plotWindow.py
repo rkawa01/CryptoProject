@@ -38,8 +38,12 @@ class CustomLabel(QLabel):
         self.currency = currency
         self.update_label()
 
-    def update_label(self, variable_text=""):
-        self.setText(self.fixed_text + variable_text + self.currency)
+    def update_label(self, variable_text="",number = False):
+        if number:
+            # round to 2 places after decimal
+            self.setText(self.fixed_text + str(round(float(variable_text), 2)) + self.currency)
+        else:
+            self.setText(self.fixed_text + variable_text + self.currency)
         self.adjustSize()
 
 class Worker(QObject):
@@ -62,13 +66,14 @@ class PlotWindow(QMainWindow):
         self.timeStampType = None
         self.cryptoInfo = Crypto("BTC", "USD", 2000, "CCCAGG")
         # Get user data
-        self.wallet = 0
+        self.wallet = 0.0
         self.bit = 0.5
-        self.balance = 0
+        self.balance = 0.0
         if self.request and self.request.info:
-            self.request.getresponse()
+            self.request.getResponse()
             self.wallet = self.request.info['wallet']
             self.bit = self.request.info['bit']
+            self.balance = self.request.info['balance']
 
         # Create threads
         self.thread = QThread()
@@ -119,8 +124,10 @@ class PlotWindow(QMainWindow):
         sellLayout = QHBoxLayout()
 
         self.buySpinBox = QDoubleSpinBox()
+        self.buySpinBox.setDecimals(4)
         self.buySpinBox.setMaximum(self.wallet / self.cryptoInfo.get_price_now())
         self.sellSpinBox = QDoubleSpinBox()
+        self.sellSpinBox.setDecimals(4)
         self.sellSpinBox.setMaximum(self.bit)
 
         buyButton = QPushButton("Buy")
@@ -202,10 +209,11 @@ class PlotWindow(QMainWindow):
 
         self.wallet -= cost
         self.balance -= cost
-        if self.request and self.request.info:
-            self.request.setter(self.bit,self.wallet)
-            self.request.postresponse(False)
 
+        if self.request and self.request.info:
+            url = 'http://127.0.0.1:8000/crypto/index/'
+            params = {"bit": str(self.bit), "wallet": str(self.wallet), "balance": str(self.balance)}
+            self.request.postResponse(url, params)
 
         self.update_labels()
     def sell(self):
@@ -215,9 +223,9 @@ class PlotWindow(QMainWindow):
         self.wallet += profit
         self.balance += profit
         if self.request and self.request.info:
-            print("GO")
-            self.request.setter(self.bit,self.wallet)
-            self.request.postresponse(False)
+            url = 'http://127.0.0.1:8000/crypto/index/'
+            params = {"bit":str(self.bit),"wallet":str(self.wallet),"balance":str(self.balance)}
+            self.request.postResponse(url,params)
 
         self.update_labels()
     def check_textbox(self):
@@ -324,8 +332,8 @@ class PlotWindow(QMainWindow):
 
     def update_runtime(self):
         current_price = self.cryptoInfo.get_price_now()
-        self.currentValue.update_label(str(current_price))
-        self.bitcoinsValue.update_label(str(current_price * self.bit))
+        self.currentValue.update_label(current_price,number = True)
+        self.bitcoinsValue.update_label(current_price * self.bit, number = True)
         # self.bitcoinsValue.setText(
         #     "My Bitcoins value as of now:   " + str(self.cryptoInfo.get_price_now() * self.bit) + " USD")
         # self.currentValue.setText("Bitcoin buy price:   " + str(self.cryptoInfo.get_price_now()) + " USD")
@@ -341,11 +349,12 @@ class PlotWindow(QMainWindow):
         self.sellSpinBox.setMaximum(self.bit)
         self.buySpinBox.setMaximum(self.wallet / current_price)
 
-        self.walletState.update_label(str(self.wallet))
-        self.bitcoinsOwned.update_label(str(self.bit))
-        self.currentValue.update_label(str(current_price))
-        self.bitcoinsValue.update_label(str(self.bit*current_price))
-        self.accountBalance.update_label(str(self.balance))
+        self.walletState.update_label(self.wallet, number = True)
+        self.bitcoinsOwned.update_label(self.bit, number = True)
+        self.currentValue.update_label(current_price,number = True)
+        self.bitcoinsValue.update_label(self.bit*current_price, number = True)
+        self.accountBalance.update_label(self.balance, number = True)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
