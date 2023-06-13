@@ -7,8 +7,10 @@ import plotWindow
 
 
 class LoginForm(QWidget):
-    def __init__(self):
+    def __init__(self,width = 1920,height = 1080):
         super().__init__()
+        self.width = width
+        self.height = height
         self.setWindowTitle('Login Form')
         self.resize(500, 120)
 
@@ -53,7 +55,8 @@ class LoginForm(QWidget):
         object_json.setToken(object_json.info["message"])
         if object_json.info["message"] is not None:
             self.hide()
-            self.next_window = plotWindow.PlotWindow(request = object_json, username = self.lineEdit_username.text())
+            self.next_window = plotWindow.PlotWindow(request = object_json, username = self.lineEdit_username.text(),
+                                                     width = self.width, height = self.height)
             self.next_window.show()
             msg.setText('Success')
             msg.exec_()

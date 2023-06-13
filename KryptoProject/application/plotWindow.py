@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import pyqtSignal, QObject, QThread
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
-    QPushButton, QLineEdit, QDoubleSpinBox, QInputDialog, QMessageBox
+    QPushButton, QLineEdit, QDoubleSpinBox, QInputDialog, QMessageBox, QDesktopWidget
 import pandas as pd
 import pyqtgraph as pg
 import seaborn as sns
@@ -24,12 +24,12 @@ class DateTimeAxis(pg.AxisItem):
         return [pd.to_datetime(value, unit='s').strftime('%Y-%m-%d %H:%M:%S') for value in values]
 
 
-class MplCanvas(FigureCanvas):
-
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+# class MplCanvas(FigureCanvas):
+#
+#     def __init__(self, parent=None, width=5, height=4, dpi=100):
+#         fig = Figure(figsize=(width, height), dpi=dpi)
+#         self.axes = fig.add_subplot(111)
+#         super(MplCanvas, self).__init__(fig)
 
 class CustomLabel(QLabel):
     def __init__(self, fixed_text, currency, parent=None):
@@ -58,9 +58,17 @@ class Worker(QObject):
         self.finished.emit()
 
 class PlotWindow(QMainWindow):
-    def __init__(self,request = None ,parent=None, username="User"):
+    def __init__(self,request = None ,parent=None, username="User", width = 1920, height = 1080):
         super(PlotWindow, self).__init__(parent)
-
+        # set larger size of the window
+        window_width = int(width * 0.8)
+        window_height = int(height * 0.8)
+        self.setGeometry(
+            int(QDesktopWidget().availableGeometry().center().x() - window_width / 2),
+            int(QDesktopWidget().availableGeometry().center().y() - window_height / 2),
+            window_width,
+            window_height,
+        )
         self.username = username
         self.request = request
         self.timeStampType = None
@@ -152,11 +160,12 @@ class PlotWindow(QMainWindow):
         # plot_layout.addWidget(toolbar)
         # plot_layout.addWidget(self.sc)
         # Both alternatives version of changing the background color of the plot area
-        sns.set(rc={'axes.facecolor': 'black', 'figure.facecolor': 'black', 'axes.grid': False, 'axes.labelcolor': 'white', 'text.color': 'white', \
-                    'xtick.color': 'white', 'ytick.color': 'white', 'axes.edgecolor': 'white', 'axes.titlecolor': 'white'})
+        sns.set(rc={'axes.facecolor': '#444444', 'figure.facecolor': '#444444', 'axes.grid': False, 'axes.labelcolor': 'white', 'text.color': 'white',
+                    'xtick.color': 'white', 'ytick.color': 'white', 'axes.edgecolor': 'gray', 'axes.titlecolor': 'white'})
         # This with less options
         # plt.style.use("dark_background")
         self.figure = plt.figure()
+        plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.2)
         # self.figure.set_facecolor("black")
         self.canvas = FigureCanvas(self.figure)
         self.ax = self.figure.add_subplot(111)
@@ -244,19 +253,31 @@ class PlotWindow(QMainWindow):
 
         self.ax.clear()
         self.exchange_rates = self.cryptoInfo.get_weekly()
+        self.ema_short = self.exchange_rates['close'].ewm(span=20, adjust=False).mean()
+        self.ema_long = self.exchange_rates['close'].ewm(span=100, adjust=False).mean()
         if (self.timeStampType):
             # if you want to retrieve some data from the request
 
             if self.timeStampType == "Daily":
                 self.exchange_rates = self.cryptoInfo.get_daily()
+                self.ema_short = self.exchange_rates['close'].ewm(span=50, adjust=False).mean()
+                self.ema_long = self.exchange_rates['close'].ewm(span=200, adjust=False).mean()
             elif self.timeStampType == "Weekly":
                 self.exchange_rates = self.cryptoInfo.get_weekly()
+                self.ema_short = self.exchange_rates['close'].ewm(span=20, adjust=False).mean()
+                self.ema_long = self.exchange_rates['close'].ewm(span=100, adjust=False).mean()
             elif self.timeStampType == "Monthly":
                 self.exchange_rates = self.cryptoInfo.get_monthly()
+                self.ema_short = self.exchange_rates['close'].ewm(span=20, adjust=False).mean()
+                self.ema_long = self.exchange_rates['close'].ewm(span=100, adjust=False).mean()
             elif self.timeStampType == "this Year":
                 self.exchange_rates = self.cryptoInfo.get_this_year()
+                self.ema_short = self.exchange_rates['close'].ewm(span=20, adjust=False).mean()
+                self.ema_long = self.exchange_rates['close'].ewm(span=100, adjust=False).mean()
             elif self.timeStampType == "Yearly":
                 self.exchange_rates = self.cryptoInfo.get_yearly()
+                self.ema_short = self.exchange_rates['close'].ewm(span=50, adjust=False).mean()
+                self.ema_long = self.exchange_rates['close'].ewm(span=200, adjust=False).mean()
 
         close_prices = self.exchange_rates.get('close')
         # print last value of the DataFrame with date as index
@@ -265,15 +286,20 @@ class PlotWindow(QMainWindow):
         # x = lowPrices.index.astype('int64')//10**9
         self.x = close_prices.index
         self.y = close_prices.values
-        # print(self.x[-1], self.y[-1])
         # plot the pandas DataFrame, passing in the matplotlib Canvas axes.
         # sns.set_style("darkgrid")
 
-        self.sc = sns.lineplot(ax=self.ax, x=self.x, y=self.y,color = "orange",marker="o",markersize=3)
+        self.sc = sns.lineplot(ax=self.ax, x=self.x, y=self.y,color = "orange",linewidth=0.7)
+        sns.lineplot(ax=self.ax, x=self.x, y=self.ema_short, color="green", label = "Short",linewidth=1)
+        sns.lineplot(ax=self.ax, x=self.x, y=self.ema_long, color="red", label = "Long",linewidth=1)
+
+        # plt.fill_between(self.x, self.y, alpha=0.3)
+
+        self.ax.legend(self.ax.get_legend_handles_labels()[0], self.ax.get_legend_handles_labels()[1],title = 'Moving average')
+        self.ax.set_ylabel('Price in dollars')
+        self.ax.set_xlabel('Date')
 
         self.ax.tick_params(axis='x', rotation=15)
-        # print(x[10])
-        # print(lowPrices.index[10])
 
         # self.min_x, self.max_x = x.min(), x.max()
         # self.min_y,self.max_y = y.min(), y.max()
@@ -285,8 +311,8 @@ class PlotWindow(QMainWindow):
         self.lnx[0].set_linestyle('None')
         self.lny[0].set_linestyle('None')
         # set annotations
-        self.annot = self.ax.annotate("", xy=(0, 0), xytext=(40, 20), textcoords="offset points", ha='center', va='bottom', \
-                                      bbox=dict(boxstyle='round,pad=0.2', fc='gray', alpha=0.5), \
+        self.annot = self.ax.annotate("", xy=(0, 0), xytext=(40, 20), textcoords="offset points", ha='center', va='bottom',
+                                      bbox=dict(boxstyle='round,pad=0.2', fc='gray', alpha=0.5),
                                       arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=-0.5',
                                                       color='red'))
         self.annot.set_visible(False)
@@ -358,7 +384,9 @@ class PlotWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = PlotWindow()
+    width = app.desktop().screenGeometry().width()
+    height = app.desktop().screenGeometry().height()
+    window = PlotWindow(width = width, height = height)
     window.show()
     sys.exit(app.exec_())
 

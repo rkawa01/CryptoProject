@@ -13,8 +13,9 @@ from loginWindow import LoginForm
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
-    form = LoginForm()
+    width = app.desktop().screenGeometry().width()
+    height = app.desktop().screenGeometry().height()
+    form = LoginForm(width,height)
     form.show()
 
     sys.exit(app.exec_())
