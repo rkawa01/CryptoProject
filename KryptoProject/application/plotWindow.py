@@ -7,8 +7,10 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVB
 import pandas as pd
 import pyqtgraph as pg
 import seaborn as sns
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import matplotlib
+import pytz
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
@@ -252,12 +254,11 @@ class PlotWindow(QMainWindow):
     def get_plot(self):
 
         self.ax.clear()
-        self.exchange_rates = self.cryptoInfo.get_weekly()
+
+        self.exchange_rates = self.cryptoInfo.get_daily()
         self.ema_short = self.exchange_rates['close'].ewm(span=20, adjust=False).mean()
         self.ema_long = self.exchange_rates['close'].ewm(span=100, adjust=False).mean()
         if (self.timeStampType):
-            # if you want to retrieve some data from the request
-
             if self.timeStampType == "Daily":
                 self.exchange_rates = self.cryptoInfo.get_daily()
                 self.ema_short = self.exchange_rates['close'].ewm(span=50, adjust=False).mean()
@@ -293,13 +294,11 @@ class PlotWindow(QMainWindow):
         sns.lineplot(ax=self.ax, x=self.x, y=self.ema_short, color="green", label = "Short",linewidth=1)
         sns.lineplot(ax=self.ax, x=self.x, y=self.ema_long, color="red", label = "Long",linewidth=1)
 
-        # plt.fill_between(self.x, self.y, alpha=0.3)
-
         self.ax.legend(self.ax.get_legend_handles_labels()[0], self.ax.get_legend_handles_labels()[1],title = 'Moving average')
         self.ax.set_ylabel('Price in dollars')
         self.ax.set_xlabel('Date')
 
-        self.ax.tick_params(axis='x', rotation=15)
+        # self.ax.tick_params(axis='x', rotation=15)
 
         # self.min_x, self.max_x = x.min(), x.max()
         # self.min_y,self.max_y = y.min(), y.max()
