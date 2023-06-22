@@ -31,9 +31,9 @@ class JsonInfo():
         self.loop.quit()
         data_get = self.reply.readAll().data()
 
-        if(data_get != b''):
-            responseData = json.loads(data_get)
-            self.info = responseData
+        if data_get != b'':
+            response_data = json.loads(data_get)
+            self.info = response_data
         else:
             self.info = None
 

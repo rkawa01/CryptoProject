@@ -11,13 +11,14 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib
 import pytz
+
 matplotlib.use('Qt5Agg')
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, \
+    NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from getCrypto import Crypto
 import mplcursors
 from time import sleep
-
 
 
 class DateTimeAxis(pg.AxisItem):
@@ -40,7 +41,7 @@ class CustomLabel(QLabel):
         self.currency = currency
         self.update_label()
 
-    def update_label(self, variable_text="",number = False):
+    def update_label(self, variable_text="", number=False):
         if number:
             # round to 2 places after decimal
             self.setText(self.fixed_text + str(round(float(variable_text), 2)) + self.currency)
@@ -48,19 +49,21 @@ class CustomLabel(QLabel):
             self.setText(self.fixed_text + variable_text + self.currency)
         self.adjustSize()
 
+
 class Worker(QObject):
     finished = pyqtSignal()
     update = pyqtSignal()
 
     def run(self):
-#         Constant update
+        # Constant update
         while True:
             self.update.emit()
             sleep(60)
-        self.finished.emit()
+        # self.finished.emit()
+
 
 class PlotWindow(QMainWindow):
-    def __init__(self,request = None ,parent=None, username="User", width = 1920, height = 1080):
+    def __init__(self, request=None, parent=None, username="User", width=1920, height=1080):
         super(PlotWindow, self).__init__(parent)
         # set larger size of the window
         window_width = int(width * 0.8)
@@ -108,7 +111,6 @@ class PlotWindow(QMainWindow):
 
         self.thread.start()
 
-
     def init(self):
 
         userLayout = QHBoxLayout()
@@ -120,7 +122,6 @@ class PlotWindow(QMainWindow):
         self.currentValue = CustomLabel("Bitcoin buy price:   ", " USD")
         self.bitcoinsValue = CustomLabel("My Bitcoins value as of now:   ", " USD")
         self.accountBalance = CustomLabel("Account balance:   ", " USD")
-
 
         textLayout.addWidget(userName)
         textLayout.addWidget(self.bitcoinsOwned)
@@ -145,7 +146,6 @@ class PlotWindow(QMainWindow):
         sellButton = QPushButton("Sell")
         sellButton.clicked.connect(lambda: self.sell())
 
-
         buyLayout.addWidget(self.buySpinBox)
         sellLayout.addWidget(self.sellSpinBox)
         buyLayout.addWidget(buyButton)
@@ -162,8 +162,10 @@ class PlotWindow(QMainWindow):
         # plot_layout.addWidget(toolbar)
         # plot_layout.addWidget(self.sc)
         # Both alternatives version of changing the background color of the plot area
-        sns.set(rc={'axes.facecolor': '#444444', 'figure.facecolor': '#444444', 'axes.grid': False, 'axes.labelcolor': 'white', 'text.color': 'white',
-                    'xtick.color': 'white', 'ytick.color': 'white', 'axes.edgecolor': 'gray', 'axes.titlecolor': 'white'})
+        sns.set(rc={'axes.facecolor': '#444444', 'figure.facecolor': '#444444', 'axes.grid': False,
+                    'axes.labelcolor': 'white', 'text.color': 'white',
+                    'xtick.color': 'white', 'ytick.color': 'white', 'axes.edgecolor': 'gray',
+                    'axes.titlecolor': 'white'})
         # This with less options
         # plt.style.use("dark_background")
         self.figure = plt.figure()
@@ -207,6 +209,7 @@ class PlotWindow(QMainWindow):
         # self.layout.addWidget(self.plot_widget)
         self.layout.addLayout(buttonLayout)
         self.layout.addStretch()
+
     def buy(self):
         cost = self.cryptoInfo.get_price_now() * self.buySpinBox.value()
         if self.wallet < cost:
@@ -227,6 +230,7 @@ class PlotWindow(QMainWindow):
             self.request.postResponse(url, params)
 
         self.update_labels()
+
     def sell(self):
 
         self.bit -= self.sellSpinBox.value()
@@ -235,13 +239,15 @@ class PlotWindow(QMainWindow):
         self.balance += profit
         if self.request and self.request.info:
             url = 'http://127.0.0.1:8000/crypto/index/'
-            params = {"bit":str(self.bit),"wallet":str(self.wallet),"balance":str(self.balance)}
-            self.request.postResponse(url,params)
+            params = {"bit": str(self.bit), "wallet": str(self.wallet), "balance": str(self.balance)}
+            self.request.postResponse(url, params)
 
         self.update_labels()
+
     def check_textbox(self):
 
         return True
+
     def resizeEvent(self, event):
         # Resize the plot placeholder label to be centered in the upper half of the window
         rect = self.geometry()
@@ -290,11 +296,12 @@ class PlotWindow(QMainWindow):
         # plot the pandas DataFrame, passing in the matplotlib Canvas axes.
         # sns.set_style("darkgrid")
 
-        self.sc = sns.lineplot(ax=self.ax, x=self.x, y=self.y,color = "orange",linewidth=0.7)
-        sns.lineplot(ax=self.ax, x=self.x, y=self.ema_short, color="green", label = "Short",linewidth=1)
-        sns.lineplot(ax=self.ax, x=self.x, y=self.ema_long, color="red", label = "Long",linewidth=1)
+        self.sc = sns.lineplot(ax=self.ax, x=self.x, y=self.y, color="orange", linewidth=0.7)
+        sns.lineplot(ax=self.ax, x=self.x, y=self.ema_short, color="green", label="Short", linewidth=1)
+        sns.lineplot(ax=self.ax, x=self.x, y=self.ema_long, color="red", label="Long", linewidth=1)
 
-        self.ax.legend(self.ax.get_legend_handles_labels()[0], self.ax.get_legend_handles_labels()[1],title = 'Moving average')
+        self.ax.legend(self.ax.get_legend_handles_labels()[0], self.ax.get_legend_handles_labels()[1],
+                       title='Moving average')
         self.ax.set_ylabel('Price in dollars')
         self.ax.set_xlabel('Date')
 
@@ -305,17 +312,17 @@ class PlotWindow(QMainWindow):
         self.min_x, self.max_x = pd.to_datetime(self.x.min().timestamp() * 0.95, unit='s'), pd.to_datetime(
             self.x.max().timestamp() * 1.05, unit='s')
         self.min_y, self.max_y = self.y.min() * 0.95, self.y.max() * 1.05
-        self.lnx = plt.plot([self.x.min(),self.x.min()], [self.y.min(), self.y.min()], color='white', linewidth=0.3)
-        self.lny = plt.plot([self.x.min(),self.x.max()], [self.y.min(), self.y.min()], color='white', linewidth=0.3)
+        self.lnx = plt.plot([self.x.min(), self.x.min()], [self.y.min(), self.y.min()], color='white', linewidth=0.3)
+        self.lny = plt.plot([self.x.min(), self.x.max()], [self.y.min(), self.y.min()], color='white', linewidth=0.3)
         self.lnx[0].set_linestyle('None')
         self.lny[0].set_linestyle('None')
         # set annotations
-        self.annot = self.ax.annotate("", xy=(0, 0), xytext=(40, 20), textcoords="offset points", ha='center', va='bottom',
+        self.annot = self.ax.annotate("", xy=(0, 0), xytext=(40, 20), textcoords="offset points", ha='center',
+                                      va='bottom',
                                       bbox=dict(boxstyle='round,pad=0.2', fc='gray', alpha=0.5),
                                       arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=-0.5',
                                                       color='red'))
         self.annot.set_visible(False)
-
 
         # mplcursors.cursor(self.sc, hover=True)
         # self.exchange_rates.plot(ax=self.sc.axes, y='low')
@@ -357,12 +364,13 @@ class PlotWindow(QMainWindow):
 
     def update_runtime(self):
         current_price = self.cryptoInfo.get_price_now()
-        self.currentValue.update_label(current_price,number = True)
-        self.bitcoinsValue.update_label(current_price * self.bit, number = True)
+        self.currentValue.update_label(current_price, number=True)
+        self.bitcoinsValue.update_label(current_price * self.bit, number=True)
         # self.bitcoinsValue.setText(
         #     "My Bitcoins value as of now:   " + str(self.cryptoInfo.get_price_now() * self.bit) + " USD")
         # self.currentValue.setText("Bitcoin buy price:   " + str(self.cryptoInfo.get_price_now()) + " USD")
         self.get_plot()
+
     def update_request(self, message):
 
         self.timeStampType = message
@@ -374,18 +382,17 @@ class PlotWindow(QMainWindow):
         self.sellSpinBox.setMaximum(self.bit)
         self.buySpinBox.setMaximum(self.wallet / current_price)
 
-        self.walletState.update_label(self.wallet, number = True)
-        self.bitcoinsOwned.update_label(self.bit, number = True)
-        self.currentValue.update_label(current_price,number = True)
-        self.bitcoinsValue.update_label(self.bit*current_price, number = True)
-        self.accountBalance.update_label(self.balance, number = True)
+        self.walletState.update_label(self.wallet, number=True)
+        self.bitcoinsOwned.update_label(self.bit, number=True)
+        self.currentValue.update_label(current_price, number=True)
+        self.bitcoinsValue.update_label(self.bit * current_price, number=True)
+        self.accountBalance.update_label(self.balance, number=True)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     width = app.desktop().screenGeometry().width()
     height = app.desktop().screenGeometry().height()
-    window = PlotWindow(width = width, height = height)
+    window = PlotWindow(width=width, height=height)
     window.show()
     sys.exit(app.exec_())
-
