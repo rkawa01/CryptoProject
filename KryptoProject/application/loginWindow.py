@@ -51,8 +51,8 @@ class LoginForm(QWidget):
         object_json = JsonInfo()
         url = 'http://127.0.0.1:8000/crypto/login/'
         params = {"name": self.lineEdit_username.text(), "pass": self.lineEdit_password.text()}
-        object_json.postResponse(url,params)
-        object_json.setToken(object_json.info["message"])
+        object_json.post_response(url, params)
+        object_json.set_token(object_json.info["message"])
         if object_json.info["message"] is not None:
             self.hide()
             self.next_window = plotWindow.PlotWindow(request = object_json, username = self.lineEdit_username.text(),

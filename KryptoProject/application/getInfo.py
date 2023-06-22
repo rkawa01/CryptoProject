@@ -1,33 +1,37 @@
 from PyQt5 import QtCore, QtNetwork
 
 import json
-class JsonInfo():
+
+
+class JsonInfo:
     def __init__(self):
+        self.reply = None
+        self.url = None
         self.token = None
         self.manager = QtNetwork.QNetworkAccessManager()
         self.info = ''
         self.loop = QtCore.QEventLoop()
-        self.manager.finished.connect(self.handleDone)
+        self.manager.finished.connect(self.handle_done)
 
-    def postResponse(self, url, params):
+    def post_response(self, url, params):
         self.url = QtCore.QUrl(url)
         request = QtNetwork.QNetworkRequest(self.url)
-        if (self.token is not None):
+        if self.token is not None:
             request.setRawHeader(b"X-CSRFToken", self.token.encode())
         multi_part = self.construct_multipart(params)
-        self.reply = self.manager.post(request,multi_part)
+        self.reply = self.manager.post(request, multi_part)
         multi_part.setParent(self.reply)
-
         self.loop.exec_()
-    def getResponse(self):
+
+    def get_response(self):
         self.url = QtCore.QUrl('http://127.0.0.1:8000/crypto/index/')
         request = QtNetwork.QNetworkRequest(self.url)
-        if (self.token is not None):
+        if self.token is not None:
             request.setRawHeader(b"X-CSRFToken", self.token.encode())
         self.reply = self.manager.get(request)
         self.loop.exec_()
 
-    def handleDone(self):
+    def handle_done(self):
         self.loop.quit()
         data_get = self.reply.readAll().data()
 
@@ -41,10 +45,12 @@ class JsonInfo():
             print('Success')
         else:
             print('Error')
-    def setToken(self,token):
+
+    def set_token(self, token):
         self.token = token
 
-    def construct_multipart(self, data):
+    @staticmethod
+    def construct_multipart(data):
         multi_part = QtNetwork.QHttpMultiPart(QtNetwork.QHttpMultiPart.FormDataType)
         for key, value in data.items():
             post_part = QtNetwork.QHttpPart()

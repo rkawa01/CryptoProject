@@ -1,24 +1,16 @@
 import sys
-
-from PyQt5.QtCore import pyqtSignal, QObject, QThread
-from PyQt5.QtGui import QIntValidator, QDoubleValidator
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
-    QPushButton, QLineEdit, QDoubleSpinBox, QInputDialog, QMessageBox, QDesktopWidget
+from time import sleep
+import matplotlib
+import matplotlib.pyplot as plt
 import pandas as pd
 import pyqtgraph as pg
 import seaborn as sns
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib
-import pytz
-
-matplotlib.use('Qt5Agg')
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, \
-    NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
+from PyQt5.QtCore import pyqtSignal, QObject, QThread
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
+    QPushButton, QDoubleSpinBox, QMessageBox, QDesktopWidget
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from getCrypto import Crypto
-import mplcursors
-from time import sleep
+matplotlib.use('Qt5Agg')
 
 
 class DateTimeAxis(pg.AxisItem):
@@ -26,13 +18,6 @@ class DateTimeAxis(pg.AxisItem):
         # Convert the tick values to datetime format
         return [pd.to_datetime(value, unit='s').strftime('%Y-%m-%d %H:%M:%S') for value in values]
 
-
-# class MplCanvas(FigureCanvas):
-#
-#     def __init__(self, parent=None, width=5, height=4, dpi=100):
-#         fig = Figure(figsize=(width, height), dpi=dpi)
-#         self.axes = fig.add_subplot(111)
-#         super(MplCanvas, self).__init__(fig)
 
 class CustomLabel(QLabel):
     def __init__(self, fixed_text, currency, parent=None):
@@ -83,7 +68,7 @@ class PlotWindow(QMainWindow):
         self.bit = 0.5
         self.balance = 0.0
         if self.request and self.request.info:
-            self.request.getResponse()
+            self.request.get_response()
             self.wallet = self.request.info['wallet']
             self.bit = self.request.info['bit']
             self.balance = self.request.info['balance']
@@ -113,26 +98,26 @@ class PlotWindow(QMainWindow):
 
     def init(self):
 
-        userLayout = QHBoxLayout()
-        textLayout = QVBoxLayout()
+        user_layout = QHBoxLayout()
+        text_layout = QVBoxLayout()
 
-        userName = QLabel("UserName:   " + self.username)
+        user_name = QLabel("UserName:   " + self.username)
         self.bitcoinsOwned = CustomLabel("My bitcoins:   ", " BTC")
         self.walletState = CustomLabel("My wallet state:   ", " USD")
         self.currentValue = CustomLabel("Bitcoin buy price:   ", " USD")
         self.bitcoinsValue = CustomLabel("My Bitcoins value as of now:   ", " USD")
         self.accountBalance = CustomLabel("Account balance:   ", " USD")
 
-        textLayout.addWidget(userName)
-        textLayout.addWidget(self.bitcoinsOwned)
-        textLayout.addWidget(self.walletState)
-        textLayout.addWidget(self.currentValue)
-        textLayout.addWidget(self.bitcoinsValue)
-        textLayout.addWidget(self.accountBalance)
+        text_layout.addWidget(user_name)
+        text_layout.addWidget(self.bitcoinsOwned)
+        text_layout.addWidget(self.walletState)
+        text_layout.addWidget(self.currentValue)
+        text_layout.addWidget(self.bitcoinsValue)
+        text_layout.addWidget(self.accountBalance)
 
-        buySellLayout = QVBoxLayout()
-        buyLayout = QHBoxLayout()
-        sellLayout = QHBoxLayout()
+        buy_sell_layout = QVBoxLayout()
+        buy_layout = QHBoxLayout()
+        sell_layout = QHBoxLayout()
 
         self.buySpinBox = QDoubleSpinBox()
         self.buySpinBox.setDecimals(4)
@@ -141,17 +126,17 @@ class PlotWindow(QMainWindow):
         self.sellSpinBox.setDecimals(4)
         self.sellSpinBox.setMaximum(self.bit)
 
-        buyButton = QPushButton("Buy")
-        buyButton.clicked.connect(lambda: self.buy())
-        sellButton = QPushButton("Sell")
-        sellButton.clicked.connect(lambda: self.sell())
+        buy_button = QPushButton("Buy")
+        buy_button.clicked.connect(lambda: self.buy())
+        sell_button = QPushButton("Sell")
+        sell_button.clicked.connect(lambda: self.sell())
 
-        buyLayout.addWidget(self.buySpinBox)
-        sellLayout.addWidget(self.sellSpinBox)
-        buyLayout.addWidget(buyButton)
-        sellLayout.addWidget(sellButton)
-        buySellLayout.addLayout(buyLayout)
-        buySellLayout.addLayout(sellLayout)
+        buy_layout.addWidget(self.buySpinBox)
+        sell_layout.addWidget(self.sellSpinBox)
+        buy_layout.addWidget(buy_button)
+        sell_layout.addWidget(sell_button)
+        buy_sell_layout.addLayout(buy_layout)
+        buy_sell_layout.addLayout(sell_layout)
 
         self.update_labels()
 
@@ -178,36 +163,36 @@ class PlotWindow(QMainWindow):
         self.figure.canvas.mpl_connect("motion_notify_event", self.hover)
 
         # Create the buttons and connect them to functions
-        buttonLayout = QHBoxLayout()
+        button_layout = QHBoxLayout()
 
         button1 = QPushButton("Today")
         button1.clicked.connect(lambda: self.update_request("Daily"))
-        buttonLayout.addWidget(button1)
+        button_layout.addWidget(button1)
 
         button2 = QPushButton("Last Week")
         button2.clicked.connect(lambda: self.update_request("Weekly"))
-        buttonLayout.addWidget(button2)
+        button_layout.addWidget(button2)
 
         button3 = QPushButton("Last Month")
         button3.clicked.connect(lambda: self.update_request("Monthly"))
-        buttonLayout.addWidget(button3)
+        button_layout.addWidget(button3)
 
         button4 = QPushButton("This Year")
         button4.clicked.connect(lambda: self.update_request("this Year"))
-        buttonLayout.addWidget(button4)
+        button_layout.addWidget(button4)
 
         button5 = QPushButton("One year")
         button5.clicked.connect(lambda: self.update_request("Yearly"))
-        buttonLayout.addWidget(button5)
+        button_layout.addWidget(button5)
 
         # Add the plot layout to the main layout
         # self.layout.addLayout(self.plot_layout)
-        userLayout.addLayout(textLayout)
-        userLayout.addLayout(buySellLayout)
-        self.layout.addLayout(userLayout)
+        user_layout.addLayout(text_layout)
+        user_layout.addLayout(buy_sell_layout)
+        self.layout.addLayout(user_layout)
         self.layout.addLayout(plot_layout)
         # self.layout.addWidget(self.plot_widget)
-        self.layout.addLayout(buttonLayout)
+        self.layout.addLayout(button_layout)
         self.layout.addStretch()
 
     def buy(self):
@@ -227,7 +212,7 @@ class PlotWindow(QMainWindow):
         if self.request and self.request.info:
             url = 'http://127.0.0.1:8000/crypto/index/'
             params = {"bit": str(self.bit), "wallet": str(self.wallet), "balance": str(self.balance)}
-            self.request.postResponse(url, params)
+            self.request.post_response(url, params)
 
         self.update_labels()
 
@@ -240,13 +225,9 @@ class PlotWindow(QMainWindow):
         if self.request and self.request.info:
             url = 'http://127.0.0.1:8000/crypto/index/'
             params = {"bit": str(self.bit), "wallet": str(self.wallet), "balance": str(self.balance)}
-            self.request.postResponse(url, params)
+            self.request.post_response(url, params)
 
         self.update_labels()
-
-    def check_textbox(self):
-
-        return True
 
     def resizeEvent(self, event):
         # Resize the plot placeholder label to be centered in the upper half of the window
@@ -264,7 +245,7 @@ class PlotWindow(QMainWindow):
         self.exchange_rates = self.cryptoInfo.get_daily()
         self.ema_short = self.exchange_rates['close'].ewm(span=20, adjust=False).mean()
         self.ema_long = self.exchange_rates['close'].ewm(span=100, adjust=False).mean()
-        if (self.timeStampType):
+        if self.timeStampType:
             if self.timeStampType == "Daily":
                 self.exchange_rates = self.cryptoInfo.get_daily()
                 self.ema_short = self.exchange_rates['close'].ewm(span=50, adjust=False).mean()
