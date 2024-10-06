@@ -5,9 +5,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pyqtgraph as pg
 import seaborn as sns
-from PyQt5.QtCore import pyqtSignal, QObject, QThread
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
-    QPushButton, QDoubleSpinBox, QMessageBox, QDesktopWidget
+from PyQt6 import QtWidgets,QtGui
+from PyQt6.QtCore import pyqtSignal, QObject, QThread
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, \
+    QPushButton, QDoubleSpinBox, QMessageBox
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from getCrypto import Crypto
 matplotlib.use('Qt5Agg')
@@ -54,8 +56,8 @@ class PlotWindow(QMainWindow):
         window_width = int(width * 0.8)
         window_height = int(height * 0.8)
         self.setGeometry(
-            int(QDesktopWidget().availableGeometry().center().x() - window_width / 2),
-            int(QDesktopWidget().availableGeometry().center().y() - window_height / 2),
+            int(QtGui.QGuiApplication.primaryScreen().availableGeometry().center().x() - window_width / 2),
+            int(QtGui.QGuiApplication.primaryScreen().availableGeometry().center().y() - window_height / 2),
             window_width,
             window_height,
         )
@@ -202,7 +204,7 @@ class PlotWindow(QMainWindow):
             msg_box.setText("Not enough money.")
             msg_box.setWindowTitle("Error buying")
             msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec_()
+            msg_box.exec()
             return
         self.bit += self.buySpinBox.value()
 
@@ -372,8 +374,10 @@ class PlotWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    width = app.desktop().screenGeometry().width()
-    height = app.desktop().screenGeometry().height()
-    window = PlotWindow(width=width, height=height)
+    #width = app.desktop().screenGeometry().width()
+    #height = app.desktop().screenGeometry().height()
+    app.primaryScreen().availableGeometry().center()
+
+    window = PlotWindow()#(width=width, height=height)
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

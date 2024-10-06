@@ -1,7 +1,8 @@
 import sys
-from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox)
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt6 import QtCore
+from PyQt6.QtWidgets import (QApplication, QWidget, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox)
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 from getInfo import JsonInfo
 import plotWindow
 
@@ -25,7 +26,7 @@ class LoginForm(QWidget):
 
         label_password = QLabel('<font size="4"> Password </font>')
         self.lineEdit_password = QLineEdit()
-        self.lineEdit_password.setEchoMode(QLineEdit.Password)
+        self.lineEdit_password.setEchoMode(QLineEdit.EchoMode.Password)
         self.lineEdit_password.setPlaceholderText('Please enter your password')
         layout.addWidget(label_password, 1, 0)
         layout.addWidget(self.lineEdit_password, 1, 1)
@@ -39,7 +40,7 @@ class LoginForm(QWidget):
         self.error_label = QLabel("", self)
         layout.addWidget(self.error_label, 3, 0, 1, 2)
         self.error_label.setStyleSheet("QLabel { color : red; }")
-        self.error_label.setAlignment(Qt.AlignCenter)
+        self.error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # self.error_label.move(50, 180)
         # self.error_label.resize(300, 20)
 
@@ -59,11 +60,11 @@ class LoginForm(QWidget):
                                                      width = self.width, height = self.height)
             self.next_window.show()
             msg.setText('Success')
-            msg.exec_()
+            msg.exec()
 
         else:
             # Show error message
             msg.setText('Incorrect username or password')
-            msg.exec_()
+            msg.exec()
             self.error_label.setText("Incorrect username or password")
 
