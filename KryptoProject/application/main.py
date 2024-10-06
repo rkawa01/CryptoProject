@@ -1,6 +1,6 @@
 # This is a sample Python script.
 import sys
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication
 from loginWindow import LoginForm
 
 # Press Shift+F10 to execute it or replace it with your code.
@@ -10,9 +10,11 @@ from loginWindow import LoginForm
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    width = app.desktop().screenGeometry().width()
-    height = app.desktop().screenGeometry().height()
-    form = LoginForm(width, height)
+    #width = app.desktop().screenGeometry().width()
+    #height = app.desktop().screenGeometry().height()
+    app.primaryScreen().availableGeometry().center()
+
+    form = LoginForm()#(width, height)
     form.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
